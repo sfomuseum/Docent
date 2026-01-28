@@ -6,15 +6,15 @@ import Logging
 @available(iOS 26.0, macOS 26.0, *)
 struct FoundationModelSummarizer: Summarizer {
     
-    var instructions: String
     var logger: Logger?
     
-    init(_ summarizer_uri: String, instructions: String, logger: Logger?) throws {
-        self.instructions = instructions
+    init(_ summarizer_uri: String, logger: Logger?) throws {
         self.logger = logger
     }
     
-    func summarize(text: String) async -> Result<String, any Error> {
+    func summarize(text: String, maxLength: Int) async -> Result<String, any Error> {
+        
+        let instructions = "Analyze this text and generate a summary that is not longer than \(maxLength) characters. Focus on retaining the meaning of the text rather than the exact text itself. Be consistent not uniform."
         
             do {
 
