@@ -17,8 +17,8 @@ let package = Package(
         ),
     ], dependencies: [
         .package(url: "https://github.com/ml-explore/mlx-swift-examples", branch: "main"),
-        .package(url: "https://github.com/apple/swift-argument-parser", from: "1.6.2"),
-        .package(url: "https://github.com/apple/swift-log", from: "1.6.4")
+        .package(url: "https://github.com/apple/swift-argument-parser", from: "1.7.0"),
+        .package(url: "https://github.com/apple/swift-log", from: "1.9.1")
     ],
     targets: [
         // Targets are the basic building blocks of a package, defining a module or a test suite.
