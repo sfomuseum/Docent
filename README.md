@@ -238,4 +238,6 @@ A couple things to note:
 
 ## See also:
 
-
+* https://github.com/ml-explore/mlx-swift
+* https://github.com/ml-explore/mlx-swift-lm
+* https://developer.apple.com/documentation/foundationmodels
