@@ -1,6 +1,11 @@
-# WallLabel
+# Docent
 
-Swift package for deriving structured data for museum wall label text using on-device machine learning (large language) models.
+Swift package for "museum-related" tasks using on-device machine learning (large language) models.
+
+* Deriving structured data for museum wall label text.
+* Summarizing texts in to new texts with a maximum characted length.
+
+_This package used to be called `WallLabel` but was renamed to be less specific._
 
 ## Background
 
@@ -8,30 +13,31 @@ Swift package for deriving structured data for museum wall label text using on-d
 
 ## Motivation
 
-This is a Swift package for deriving structured data for museum wall label text using on-device machine learning (large language) models. It was extracted from the [sfomuseum/Registrar](https://github.com/sfomuseum/Registrar) package in order to make it is easier to develop new parsers and to test existing ones independent of a GUI-based application..
+This is a Swift package for "museum-related" tasks using on-device machine learning (large language) models. The definition of "museum-related" is vague and debateable but SFO Museum is a museum and these tools target things we do so there you go.
 
-Currently it supports using the built-in "Foundation" models that ship with AppleOS 26 devices and a limited set of models available from HuggingFace which are manipulated using the Apple MLX packages (and which run on pre AppleOS 26 devices). Support for manipulating models using the [llama.cpp XCFramework Swift bindings](https://github.com/ggml-org/llama.cpp?tab=readme-ov-file#xcframework) are in the works but incomplete as of this writing.
-
+Currently it supports using the built-in "Foundation" models that ship with AppleOS 26 devices and models available from HuggingFace which are manipulated using the Apple MLX packages (and which run on pre AppleOS 26 devices). Support for manipulating models using the [llama.cpp XCFramework Swift bindings](https://github.com/ggml-org/llama.cpp?tab=readme-ov-file#xcframework) are in the works but incomplete as of this writing.
 
 ## Documentation
 
-Documentation is spotty and incomplete at this time.
+Documentation is "okay" but incomplete at this time.
 
 ## Usage
+
+### Parsing wall labels
 
 ```
 import Logging
 import WallLabel
 
-let parser_uri = "mlx://?model=llama3.2:1b"
+let parser_uri = "mlx://?model=mlx-community/Olmo-3-7B-Instruct-8bit"
 let label_text = "YOUR LABEL TEXT HERE"
 
-let logger = Logger(label: "org.sfomuseum.wall-label")
+let logger = Logger(label: "org.sfomuseum.docent.label")
 
 var label_parser: Parser
         
 do {
-	label_parser = try NewParser(parser_uri: parser_uri, logger: logger)
+	label_parser = try await NewParser(parser_uri: parser_uri, logger: logger)
 } catch {
 	// throw error here...
 }
@@ -46,7 +52,39 @@ case .failure(let error):
 }	
 ```
 
-## Parsers
+_Note: The `Parser` class will probably be renamed (to something like `WallLabelParser`) in future releases._
+
+### Summarzing texts
+
+```
+import Logging
+import Summarizer
+
+let summarizer_uri = "mlx://?model=mlx-community/Olmo-3-7B-Instruct-8bit"
+let text = "YOUR TEXT TO SUMMARIZE"
+let max_length = 77
+
+let logger = Logger(label: "org.sfomuseum.docent.summarize")
+
+var summarizer: Summarizer
+        
+do {
+    summarizer = try await NewSummarizer(summarizer_uri, logger: logger)
+} catch {
+    throw error
+}
+        
+let rsp = await summarizer.summarize(text: text, maxLength: max_length) 
+
+switch rsp {
+case .success(let summary):
+    print(summary)
+case .failure(let err):
+    throw err
+}
+```
+        
+## URIs
 
 ### FoundationModels
 
@@ -64,115 +102,146 @@ To use models available from HuggingFace and manipulated using the Apple [MLX Sw
 mlx://?model={MODEL_NAME}
 ```
 
-The following models are available when using the `mlx://` parser:
-
-* llama3.2:1b
-* qwen2.5:1.5b
-* smolLM:135m
-* qwen3:0.6b
-* qwen3:1.7b
-* qwen3:4b
-* qwen3:8b
-* acereason:7B
-* gemma3n:E2B
-* gemma3n:E4B 
-
-The choice of these models is a reflection of the fact that the `MLXService` package, which is used to fetch and cache models, was largely copied over wholesale from the [ml-explore/mlx-swift-examples](https://github.com/ml-explore/mlx-swift-examples/blob/main/Applications/MLXChatExample/README.md) package and these models are what came with it.
-
-Other models will be supported in time.
-
+_See the [ml-explore/mlx-swift-lm](https://github.com/ml-explore/mlx-swift-lm) package, which is what does all the "heavy lifting", for details._
 
 ## Tools
 
-### wall-label
+### docent
 
 ```
-$> wall-label parse -h
+$> docent -h
+USAGE: docent <subcommand>
+
+OPTIONS:
+  -h, --help              Show help information.
+
+SUBCOMMANDS:
+  summarize               Command line tool for summarizing text.
+  label                   Parse the text of a wall label in to JSON-encoded structured data.
+
+  See 'docent help <subcommand>' for detailed help.
+```  
+ 
+#### docent label
+
+Parse the text of a wall label in to JSON-encoded structured data.
+
+```
+$> docent label -h
 OVERVIEW: Parse the text of a wall label in to JSON-encoded structured data.
 
-USAGE: wall-label parse [--parser_uri <parser_uri>] [--label_text <label_text>] [--verbose <verbose>]
+USAGE: docent label [--parser_uri <parser_uri>] [--label_text <label_text>] [--instructions <instructions>] [--verbose <verbose>]
 
 OPTIONS:
   --parser_uri <parser_uri>
-                          The parser scheme is to use for parsing wall label text. (default: mlx://?model=llama3.2:1b)
+                          The parser scheme is to use for parsing wall label text. (default: mlx://?model=mlx-community/Olmo-3-7B-Instruct-8bit)
   --label_text <label_text>
                           The label text to parse in to structured data.
+  --instructions <instructions>
+                          Optional custom instructions to use when parsing wall label text.
   --verbose <verbose>     Enable verbose logging (default: false)
   -h, --help              Show help information.
+```
+  
+For example:
+
+```
+$> docent label --verbose=true --label_text "Honeywell CT87K Round Heat-Only Manual Current production model introduced in 1953 Designed by Henry Dreyfuss Associates (USA, founded Manufactured by Honeywell, Inc. (Minneapolis, Minnesota, USA) Plastic, mechanical and electrical components, lithium battery, mercury-free thermostat dials, domestic, consumer, interface, interaction, personal environmental control Purchased from manufacturer. Henry Dreyfuss began designing the Honeywell Round Thermostat in 1943. He observed that rectangular thermostats often sit crooked on the wall; a round device would properly. The Honeywell be easier to install Round, released a allows users decade later, to adjust temperature with a simple twist of the dial. Dreyfuss's design also promoted customization: users could remove the protective cover and paint the device to match the room. Today, the Honeywell Round remains one of the world's most ubiquitous thermostats." | jq
+
+2026-01-29T13:16:52-0800 debug org.sfomuseum.docent.label: [WallLabel] Loading mlx-community/Olmo-3-7B-Instruct-8bit 100.0% complete
+2026-01-29T13:17:07-0800 debug org.sfomuseum.docent.label: [WallLabel] {"title": "Honeywell CT87K Round Heat-Only Manual Thermostat", "date": "1953", "creator": "Honeywell, Inc.", "creditline": "Purchased from manufacturer; designed by Henry Dreyfuss Associates (USA); manufactured by Honeywell, Inc. (Minneapolis, Minnesota, USA)", "location": "", "medium": "Plastic, mechanical and electrical components, lithium battery, mercury-free thermostat dials", "accession_number": "", "input": "Honeywell CT87K Round Heat-Only Manual current model introduced in 1953 Designed by Henry Dreyfuss Associates (USA, founded) Manufactured by Honeywell, Inc. (Minneapolis, Minnesota, USA) Plastic, mechanical and electrical components, lithium battery, mercury-free thermostat dials, domestic, consumer, interface, interaction, personal environmental control Purchased from manufacturer. Henry Dreyfuss began designing the Honeywell Round Thermostat in 1943. It was designed to sit straight on the wall and allow easy temperature adjustment with a twist of the dial. The design also allowed for customization by removing the cover to paint the device."}
+2026-01-29T13:17:07-0800 debug org.sfomuseum.docent.label: [WallLabel] Time to parse wall label 13.41082501411438 seconds
+
+{
+  "latitude": 0,
+  "medium": "Plastic, mechanical and electrical components, lithium battery, mercury-free thermostat dials",
+  "longitude": 0,
+  "creator": "Honeywell, Inc.",
+  "title": "Honeywell CT87K Round Heat-Only Manual Thermostat",
+  "location": "",
+  "accession_number": "",
+  "timestamp": 1769721427,
+  "input": "Honeywell CT87K Round Heat-Only Manual Current production model introduced in 1953 Designed by Henry Dreyfuss Associates (USA, founded Manufactured by Honeywell, Inc. (Minneapolis, Minnesota, USA) Plastic, mechanical and electrical components, lithium battery, mercury-free thermostat dials, domestic, consumer, interface, interaction, personal environmental control Purchased from manufacturer. Henry Dreyfuss began designing the Honeywell Round Thermostat in 1943. He observed that rectangular thermostats often sit crooked on the wall; a round device would properly. The Honeywell be easier to install Round, released a allows users decade later, to adjust temperature with a simple twist of the dial. Dreyfuss's design also promoted customization: users could remove the protective cover and paint the device to match the room. Today, the Honeywell Round remains one of the world's most ubiquitous thermostats.",
+  "date": "1953",
+  "creditline": "Purchased from manufacturer; designed by Henry Dreyfuss Associates (USA); manufactured by Honeywell, Inc. (Minneapolis, Minnesota, USA)"
+}
+```
+
+Or:
+
+```
+$> docent label --verbose=true --label_text "Promotion, Chiat/ Day: Effective Brick Design Director: Tibor Kalman (American, b. Hungary, 1949–1999); Firm: M&Co (United States); USA offset lithography Gift of Tibor Kalman/ M & Co. Cooper Hewitt Smithsonian National Design Museum 1993-151-257-1" | jq
+
+2026-01-29T13:23:30-0800 debug org.sfomuseum.docent.label: [WallLabel] Loading mlx-community/Olmo-3-7B-Instruct-8bit 100.0% complete
+2026-01-29T13:23:42-0800 debug org.sfomuseum.docent.label: [WallLabel] Time to parse wall label 10.06504201889038 seconds
+
+{
+  "medium": "offset lithography",
+  "timestamp": 1769721822,
+  "longitude": 0,
+  "accession_number": "1993-151-257-1",
+  "creator": "Tibor Kalman",
+  "title": "Promotion",
+  "creditline": "Gift of Tibor Kalman/ M & Co. Cooper Hewitt Smithsonian National Design Museum 1993-151-257-1",
+  "date": "",
+  "location": "Cooper Hewitt Smithsonian National Design Museum",
+  "latitude": 0,
+  "input": "Promotion, Chiat/ Day: Effective Brick Design Director: Tibor Kalman (American, b. Hungary, 1949–1999); Firm: M&Co (United States); USA offset lithography Gift of Tibor Kalman/ M & Co. Cooper Hewitt Smithsonian National Design Museum 1993-151-257-1"
+}
+```
+#### docent summarize
+
+Command line tool for summarizing text.
+
+```
+$> /docent summarize -h
+OVERVIEW: Command line tool for summarizing text.
+
+USAGE: docent summarize [--summarizer_uri <summarizer_uri>] [--text <text>] [--max_length <max_length>] [--verbose <verbose>]
+
+OPTIONS:
+  --summarizer_uri <summarizer_uri>
+                          A URI denoting the framework and model to use for summarizing text. (default: mlx://?model=mlx-community/Olmo-3-7B-Instruct-8bit)
+  --text <text>           The text to summarize
+  --max_length <max_length>
+                          The maximum length of the summary. (default: 77)
+  --verbose <verbose>     Enable verbose logging (default: false)
+  -h, --help              Show help information.
+```
+  
+For example:
+
+```
+$> docent summarize --verbose=true --summarizer_uri 'mlx://?model=mlx-community/Olmo-3-7B-Instruct-8bit' --text 'Timetable issued by Sunworld International Airways, effective April 1, 1986; four page double-sided fold-out; yellow cover with route map and text announcing new service to Los Angeles and Milwaukee.'
+2026-01-29T13:19:34-0800 debug org.sfomuseum.docent.summarize: [Summarizer] Loading mlx-community/Olmo-3-7B-Instruct-8bit 100.0% complete
+2026-01-29T13:20:04-0800 debug org.sfomuseum.docent.summarize: [Summarizer] Time to summarize text 1.6216939687728882 seconds
+Sunworld announced new LA and Milwaukee routes in a 1986 four-page fold-out timetable.
 ```
 
 #### Building
 
-The easiest thing to build the `wall-label` tool is use the handy `macos` and `macos-tahoe` Makefile targets. The former explicitly excludes any Apple `FoundationModel` -related libraries which are not supported on pre-MacOS 26 devices.
+The easiest thing to build the `docent` tool is use the handy `macos` Makefile targets.
 
-Note that it is necessary to build the `wall-label` command line tool with `xcodebuild` rather than `swift build`. This is because of the need to compile the tool with the Apple "Metal" dependencies.
 
 ```
 $> make macos
-xcodebuild build -scheme wall-label -destination 'platform=OS X' EXCLUDED_SOURCE_FILE_NAMES=Parser_FoundationModel.swift,WallLabel_Generable.swift
+
+xcodebuild -destination 'platform=macOS' -scheme docent -configuration Release
 Command line invocation:
-    /Applications/Xcode.app/Contents/Developer/usr/bin/xcodebuild build -scheme wall-label -destination "platform=OS X"
+    /Applications/Xcode.app/Contents/Developer/usr/bin/xcodebuild -destination platform=macOS -scheme docent -configuration Release
 
-Resolve Package Graph
-2025-10-24 13:08:51.189 xcodebuild[11565:1131787] [MT] IDERunDestination: Supported platforms for the buildables in the current scheme is empty.
-
-...All kinds of build gibberish and other output
+...lots and lots of build gibberish and other output
 ```
 
-This will build the `wall-label` tool in a folder called `{YOUR_HOMEDIR}/Library/Developer/Xcode/DerivedData/WallLabel-{SOME_RANDOM_STRING}/Build/Products/Debug/`. This is probably the correct thing to do from an overall security perspective but it's still kind of annoying since that path is not explicitly called out at the end and you have to fish around for it in the build gibberish. Oh well...
+This will build the `wall-label` tool in a folder called `{YOUR_HOMEDIR}/Library/Developer/Xcode/DerivedData/Docent-{SOME_RANDOM_STRING}/Build/Products/Release/`. This is probably the correct thing to do from an overall security perspective but it's still kind of annoying since that path is not explicitly called out at the end and you have to fish around for it in the build gibberish. Oh well...
 
-#### Example
+A couple things to note:
 
-```
-$> {YOUR_HOMEDIR}/Library/Developer/Xcode/DerivedData/WallLabel-{SOME_RANDOM_STRING}/Build/Products/Debug/wall-label parse \
-   	--parser_uri 'mlx://?model=llama3.2:1b' \
-	--label_text 'Promotion, Chiat/ Day: Effective Brick Design Director: Tibor Kalman (American, b. Hungary, 1949–1999); Firm: M&Co (United States); USA offset lithography Gift of Tibor Kalman/ M & Co. Cooper Hewitt Smithsonian National Design Museum 1993-151-257-1' \
+1. The use `xcodebuild` to compile tools. That's because the MLX libraries depend on compiling a `default.metallib` file which a plain-vanilla `swift build` command doesn't know how to do.
+2. The use of the `Release` target which is what appears to be necessary to bundle said `default.metallib` with the final binary. At least I think that's why. The documentation around bundling Metal shaders with command line tools is a bit confusing to me still.
 
-| jq
+## See also:
 
-{
-  "longitude": 0,
-  "input": "Promotion, Chiat/ Day: Effective Brick Design Director: Tibor Kalman (American, b. Hungary, 1949–1999); Firm: M&Co (United States); USA offset lithography Gift of Tibor Kalman/ M & Co. Cooper Hewitt Smithsonian National Design Museum 1993-151-257-1",
-  "date": "1993",
-  "creator": "Tibor Kalman (American, b. Hungary, 1949–1999)",
-  "creditline": "Cooper Hewitt Smithsonian National Design Museum",
-  "accession_number": "151-257-1",
-  "timestamp": 1761336687,
-  "latitude": 0,
-  "location": "1993-151-257-1",
-  "title": "Effective Brick",
-  "medium": "offset lithography"
-}
-```
-
-Note that aside from the fact that whichever model you are using may just return crazy-talk some models will return crazy-talk wrapped in Markdown. For example, using the `qwen2.5:1.5b` model:
-
-```
-$> {YOUR_HOMEDIR}/Library/Developer/Xcode/DerivedData/WallLabel-{SOME_RANDOM_STRING}/Build/Products/Debug/wall-label parse \
-   	--parser_uri 'mlx://?model=qwen2.5:1.5b` \
-    --verbose=true \       
-	--label_text 'Promotion, Chiat/ Day: Effective Brick Design Director: Tibor Kalman (American, b. Hungary, 1949–1999); Firm: M&Co (United States); USA offset lithography Gift of Tibor Kalman/ M & Co. Cooper Hewitt Smithsonian National Design Museum 1993-151-257-1' \
-
-| jq
-
-2025-10-24T13:14:17-0700 debug org.sfomuseum.wall-label: [WallLabel] Load model qwen2.5:1.5b
-2025-10-24T13:14:17-0700 debug org.sfomuseum.wall-label: [WallLabel] Load model (qwen2.5:1.5b) from source
-2025-10-24T13:14:23-0700 debug org.sfomuseum.wall-label: [WallLabel] Loading model qwen2.5:1.5b 100.0% completed
-2025-10-24T13:14:30-0700 debug org.sfomuseum.wall-label: [WallLabel] INFO GenerateCompletionInfo(promptTokenCount: 404, generationTokenCount: 105, promptTime: 0.22025799751281738, generateTime: 1.4748320579528809)
-2025-10-24T13:14:30-0700 debug org.sfomuseum.wall-label: [WallLabel] DONE ```json
-{
-  "title": "Promotion",
-  "date": "",
-  "creator": "Chiat/ Day",
-  "creditline": "Director: Tibor Kalman (American, b. Hungary, 1949–1999); Firm: M&Co (United States)",
-  "location": "",
-  "medium": "",
-  "accession_number": "1993-151-257-1",
-  "input": ""
-}
-```
-```
-Error: dataCorrupted(Swift.DecodingError.Context(codingPath: [], debugDescription: "The given data was not valid JSON.", underlyingError: Optional(Error Domain=NSCocoaErrorDomain Code=3840 "Unexpected character '`' around line 1, column 1." UserInfo={NSDebugDescription=Unexpected character '`' around line 1, column 1., NSJSONSerializationErrorIndex=0})))
-```
-
-Perhaps this issue can be addressed with improved instructions on input. There's lots left to do.
+* https://github.com/ml-explore/mlx-swift
+* https://github.com/ml-explore/mlx-swift-lm
+* https://developer.apple.com/documentation/foundationmodels

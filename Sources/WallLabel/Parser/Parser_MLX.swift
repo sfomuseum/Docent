@@ -14,9 +14,9 @@ public struct MLXParser: Parser {
     
     var instructions: String
     var logger: Logger?
-    var model: LMModel
+    var model: ModelContext
     
-    public init(_ parser_uri: String, instructions: String, logger: Logger?) throws {
+    public init(_ parser_uri: String, instructions: String, logger: Logger?) async throws {
         
         guard let u = URL(string: parser_uri) else {
             throw ParserErrors.invalidURI
@@ -29,18 +29,15 @@ public struct MLXParser: Parser {
         guard let model_name = components.queryItems?.first(where: { $0.name == "model" })?.value else {
             throw MLXParserErrors.missingModel
         }
-        var model: LMModel?
+
+        var model: ModelContext?
         
-        for m in MLXService.availableModels {
-            
-            if m.name == model_name {
-                model = m
-                break
-            }
-        }
-        
-        if model == nil {
-            throw MLXParserErrors.unknownModel
+        do {
+            model = try await loadModel(id: model_name, progressHandler: { status in
+                logger?.debug("Loading \(model_name) \(status.fractionCompleted * 100)% complete")
+            })
+        } catch {
+            throw error
         }
         
         self.instructions = instructions
@@ -50,39 +47,27 @@ public struct MLXParser: Parser {
     
     public func parse(text: String) async -> Result<WallLabel, any Error> {
         
-        let mlxService = MLXService()
-        //let selectedModel: LMModel = MLXService.availableModels.first!
+        let t1 = Date()
         
-        let prompt: String = self.instructions + " The text to parse is: " + text
-        var result: String = ""
+        defer {
+            let t2 = Date()
+            logger?.debug("Time to parse wall label \(t2.timeIntervalSince(t1)) seconds")
+        }
         
-        var messages: [Message] = [
-            .system("You are a helpful assistant!")
-        ]
+        let prompt =  text
         
-        messages.append(.user(prompt))
-        messages.append(.assistant(""))
-        
+        let session = ChatSession(self.model)
+        let result: String
+                       
         do {
-            for await generation in try await mlxService.generate(
-                messages: messages, model: self.model, logger: self.logger)
-            {
-                switch generation {
-                case .chunk(let chunk):
-                    result += chunk
-                case .info(let info):
-                    self.logger?.debug("INFO \(info)")
-                case .toolCall(_):
-                    // print("TOOL \(call)")
-                    break
-                }
-            }
+            session.instructions = instructions
+            result = try await session.respond(to: prompt)
         } catch {
+            logger?.error("Failed to parse label text, \(error)")
             return .failure(error)
         }
         
-        self.logger?.debug("DONE \(result)")
-        
+        // self.logger?.debug("\(result)")        
         let data = result.data(using: .utf8)
         
         do {
@@ -96,6 +81,7 @@ public struct MLXParser: Parser {
 
             return .success(label)
         } catch {
+            logger?.error("Failed to decode wall label text, \(error)")
             return .failure(error)
         }
         
