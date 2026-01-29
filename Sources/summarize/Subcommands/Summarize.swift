@@ -34,7 +34,7 @@ struct Summarize: AsyncParsableCommand {
         var summarizer: Summarizer
         
         do {
-                summarizer = try NewSummarizer(summarizer_uri, logger: logger)
+            summarizer = try await NewSummarizer(summarizer_uri, logger: logger)
         } catch {
             throw error
         }

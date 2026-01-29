@@ -8,7 +8,7 @@ struct FoundationModelSummarizer: Summarizer {
     
     var logger: Logger?
     
-    init(_ summarizer_uri: String, logger: Logger?) throws {
+    init(_ summarizer_uri: String, logger: Logger?) async throws {
         self.logger = logger
     }
     
