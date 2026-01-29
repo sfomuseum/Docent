@@ -1,7 +1,7 @@
 import ArgumentParser
 
 import Logging
-import WallLabel
+import Summarizer
 
 enum ParseErrors: Error {
     case invalidParser
@@ -39,7 +39,7 @@ struct Summarize: AsyncParsableCommand {
             throw error
         }
         
-        let rsp = await label_parser.summarize(text: text, maxLength: max_length)
+        let rsp = await summarizer.summarize(text: text, maxLength: max_length)
         
         switch rsp {
         case .success(let summary):

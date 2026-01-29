@@ -18,7 +18,7 @@ struct FoundationModelSummarizer: Summarizer {
         
             do {
 
-                let session = LanguageModelSession(instructions: self.instructions)
+                let session = LanguageModelSession(instructions: instructions)
                 
                 let response = try await session.respond(
                     to: text,

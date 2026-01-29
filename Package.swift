@@ -20,7 +20,7 @@ let package = Package(
         ),
     ],
     dependencies: [
-        .package(url: "https://github.com/ml-explore/mlx-swift-examples", branch: "main"),
+        // .package(url: "https://github.com/ml-explore/mlx-swift-examples", branch: "main"),
         .package(url: "https://github.com/ml-explore/mlx-swift-lm/", branch: "main"),
         .package(url: "https://github.com/apple/swift-argument-parser", from: "1.7.0"),
         .package(url: "https://github.com/apple/swift-log", from: "1.9.1"),

@@ -12,7 +12,6 @@ enum MLXSummarizerErrors: Error {
     
 public struct MLXSummarizer: Summarizer {
     
-    var instructions: String
     var logger: Logger?
     var model: LMModel
     
@@ -52,11 +51,11 @@ public struct MLXSummarizer: Summarizer {
         let mlxService = MLXService()
         //let selectedModel: LMModel = MLXService.availableModels.first!
         
-        let prompt: String = self.instructions + " The text to parse is: " + text
+        let prompt: String = "Analyze this text and generate a summary that is not longer than \(maxLength) characters. Focus on retaining the meaning of the text rather than the exact text itself. Be consistent not uniform. The text to summary is: " + text
         var result: String = ""
         
         var messages: [Message] = [
-            .system("You are a helpful assistant!")
+            .system("Your goal is to analyze texts and summarize them in to new texts no longer than \(maxLength) characters. Focus on retaining the meaning of the text rather than the exact text itself. Be consistent not uniform.")
         ]
         
         messages.append(.user(prompt))
@@ -83,11 +82,6 @@ public struct MLXSummarizer: Summarizer {
         self.logger?.debug("DONE \(result)")
         
         return .success(result)
-
-        } catch {
-            return .failure(error)
-        }
-        
     }
 
 }

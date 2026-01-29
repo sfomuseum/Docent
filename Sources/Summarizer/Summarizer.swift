@@ -15,7 +15,7 @@ public protocol Summarizer {
 
 public func NewSummarizer(_ summarizer_uri: String, logger: Logger?) throws -> Summarizer {
     
-    guard let u = URL(string: Summarizer_uri) else {
+    guard let u = URL(string: summarizer_uri) else {
         throw SummarizerErrors.invalidURI
     }
     
@@ -28,7 +28,7 @@ public func NewSummarizer(_ summarizer_uri: String, logger: Logger?) throws -> S
         case "foundation":
             
             if #available(iOS 26.0, macOS 26.0, *) {
-                summarizer = try FoundationModelSummarizer(Summarizer_uri, logger: logger)
+                summarizer = try FoundationModelSummarizer(summarizer_uri, logger: logger)
             } else {
                 throw SummarizerErrors.unsupportedSummarizer
             }
