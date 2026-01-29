@@ -1,19 +1,21 @@
 # Docent
 
-Swift package for Museum-related tasks using on-device machine learning (large language) models.
+Swift package for "museum-related" tasks using on-device machine learning (large language) models.
 
 * Deriving structured data for museum wall label text.
 * Summarizing texts in to new texts with a maximum characted length.
 
+_This package used to be called `WallLabel` but was renamed to be less specific._
+
 ## Motivation
 
-This is a Swift package for Museum-related tasks using on-device machine learning (large language) models.
+This is a Swift package for "museum-related" tasks using on-device machine learning (large language) models. The definition of "museum-related" is vague and debateable but SFO Museum is a museum and these tools target things we do so there you go.
 
 Currently it supports using the built-in "Foundation" models that ship with AppleOS 26 devices and models available from HuggingFace which are manipulated using the Apple MLX packages (and which run on pre AppleOS 26 devices). Support for manipulating models using the [llama.cpp XCFramework Swift bindings](https://github.com/ggml-org/llama.cpp?tab=readme-ov-file#xcframework) are in the works but incomplete as of this writing.
 
 ## Documentation
 
-Documentation is incomplete at this time.
+Documentation is "okay" but incomplete at this time.
 
 ## Usage
 
@@ -233,3 +235,7 @@ A couple things to note:
 
 1. The use `xcodebuild` to compile tools. That's because the MLX libraries depend on compiling a `default.metallib` file which a plain-vanilla `swift build` command doesn't know how to do.
 2. The use of the `Release` target which is what appears to be necessary to bundle said `default.metallib` with the final binary. At least I think that's why. The documentation around bundling Metal shaders with command line tools is a bit confusing to me still.
+
+## See also:
+
+
