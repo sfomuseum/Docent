@@ -16,6 +16,13 @@ struct FoundationModelParser: Parser {
     
     func parse(text: String) async -> Result<WallLabel, any Error> {
         
+        let t1 = Date()
+        
+        defer {
+            let t2 = Date()
+            logger?.debug("Time to parse wall label \(t2.timeIntervalSince(t1)) seconds")
+        }
+        
         var label = WallLabelGenerable(text)
         label.timestamp = Int(NSDate().timeIntervalSince1970)
         label.latitude = 0.0
@@ -41,6 +48,7 @@ struct FoundationModelParser: Parser {
                 return .success(label)
 
             } catch {
+                logger?.error("Failed to parse label text, \(error)")
                 return .failure(error)
             }
 

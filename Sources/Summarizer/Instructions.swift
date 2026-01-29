@@ -1,0 +1,1 @@
+let instructions = "Analyze this text and generate a summary that is not longer than {MAX_LENGTH} characters. Focus on retaining the meaning of the text rather than the exact text itself. Be consistent not uniform. Ensure that the final text is no more than {MAX_LENGTH} characters long and do not return multiple variations."

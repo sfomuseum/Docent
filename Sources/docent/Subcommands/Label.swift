@@ -8,11 +8,11 @@ enum ParseErrors: Error {
     case stringifyError
 }
 
-struct Parse: AsyncParsableCommand {
+struct Label: AsyncParsableCommand {
     static let configuration = CommandConfiguration(abstract: "Parse the text of a wall label in to JSON-encoded structured data.")
     
     @Option(help: "The parser scheme is to use for parsing wall label text.")
-    var parser_uri: String = "mlx://?model=llama3.2:1b"
+    var parser_uri: String = "mlx://?model=mlx-community/Olmo-3-7B-Instruct-8bit"
     
     @Option(help: "The label text to parse in to structured data.")
     var label_text: String = ""
@@ -25,7 +25,7 @@ struct Parse: AsyncParsableCommand {
     
     func run() async throws {
         
-        var logger = Logger(label: "org.sfomuseum.wall-label")
+        var logger = Logger(label: "org.sfomuseum.docent.label")
 
         if verbose {
             logger.logLevel = .debug
@@ -36,9 +36,9 @@ struct Parse: AsyncParsableCommand {
         do {
             
             if instructions != "" {
-                label_parser = try NewParserWithInstructions(parser_uri, instructions: instructions, logger: logger)
+                label_parser = try await NewParserWithInstructions(parser_uri, instructions: instructions, logger: logger)
             } else {
-                label_parser = try NewParser(parser_uri, logger: logger)
+                label_parser = try await NewParser(parser_uri, logger: logger)
             }
             
         } catch {

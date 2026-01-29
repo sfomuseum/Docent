@@ -3,16 +3,11 @@ import ArgumentParser
 import Logging
 import Summarizer
 
-enum ParseErrors: Error {
-    case invalidParser
-    case stringifyError
-}
-
 struct Summarize: AsyncParsableCommand {
-    static let configuration = CommandConfiguration(abstract: "")
+    static let configuration = CommandConfiguration(abstract: "Command line tool for summarizing text.")
     
-    @Option(help: "The parser scheme is to use for parsing wall label text.")
-    var summarizer_uri: String = "mlx://?model=llama3.2:1b"
+    @Option(help: "A URI denoting the framework and model to use for summarizing text.")
+    var summarizer_uri: String = "mlx://?model=mlx-community/Olmo-3-7B-Instruct-8bit"
     
     @Option(help: "The text to summarize")
     var text: String = ""
@@ -25,7 +20,7 @@ struct Summarize: AsyncParsableCommand {
     
     func run() async throws {
         
-        var logger = Logger(label: "org.sfomuseum.summarize")
+        var logger = Logger(label: "org.sfomuseum.docent.summarize")
 
         if verbose {
             logger.logLevel = .debug

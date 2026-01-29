@@ -4,8 +4,8 @@ import ArgumentParser
 @main
 struct LabelParser: AsyncParsableCommand {
   static let configuration = CommandConfiguration(
-    commandName: "summarize",
-    subcommands: [Summarize.self],
-    defaultSubcommand: Summarize.self,
+    commandName: "docent",
+    subcommands: [Summarize.self, Label.self],
+    // defaultSubcommand: Summarize.self,
   )
 }

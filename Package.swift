@@ -4,7 +4,7 @@
 import PackageDescription
 
 let package = Package(
-    name: "WallLabel",
+    name: "Docent",
     platforms: [
         .iOS(.v17),
         .macOS(.v14)
@@ -20,7 +20,6 @@ let package = Package(
         ),
     ],
     dependencies: [
-        // .package(url: "https://github.com/ml-explore/mlx-swift-examples", branch: "main"),
         .package(url: "https://github.com/ml-explore/mlx-swift-lm/", branch: "main"),
         .package(url: "https://github.com/apple/swift-argument-parser", from: "1.7.0"),
         .package(url: "https://github.com/apple/swift-log", from: "1.9.1"),
@@ -43,16 +42,9 @@ let package = Package(
                 ]
         ),
         .executableTarget(
-            name: "wall-label",
+            name: "docent",
             dependencies: [
                 "WallLabel",
-                .product(name: "ArgumentParser", package: "swift-argument-parser"),
-                .product(name: "Logging", package: "swift-log")
-            ]
-        ),
-        .executableTarget(
-            name: "summarize",
-            dependencies: [
                 "Summarizer",
                 .product(name: "ArgumentParser", package: "swift-argument-parser"),
                 .product(name: "Logging", package: "swift-log")

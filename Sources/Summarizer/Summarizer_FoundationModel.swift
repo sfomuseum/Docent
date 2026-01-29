@@ -13,21 +13,28 @@ struct FoundationModelSummarizer: Summarizer {
     }
     
     func summarize(text: String, maxLength: Int) async -> Result<String, any Error> {
+
+        let t1 = Date()
         
-        let instructions = "Analyze this text and generate a summary that is not longer than \(maxLength) characters. Focus on retaining the meaning of the text rather than the exact text itself. Be consistent not uniform."
+        defer {
+            let t2 = Date()
+            logger?.debug("Time to summarize text \(t2.timeIntervalSince(t1)) seconds")
+        }
         
+        let local_instructions = instructions.replacingOccurrences(of: "{MAX_LENGTH}", with: "\(maxLength)")
+
             do {
 
-                let session = LanguageModelSession(instructions: instructions)
+                let session = LanguageModelSession(instructions: local_instructions)
                 
                 let response = try await session.respond(
                     to: text,
-                    // generating: WallLabelGenerable.self
                 )
                                 
                 return .success(response.content)
 
             } catch {
+                logger?.error("Failed to generate summary \(error)")
                 return .failure(error)
             }
 

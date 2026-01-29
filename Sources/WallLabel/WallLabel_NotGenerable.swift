@@ -33,7 +33,7 @@ public struct WallLabelNotGenerable: WallLabel, Codable {
     var longitude: Float64?
     
     /// The raw text of a wall label that was parsed in to a WallLabel struct
-    var input: String
+    var input: String?
     
     init(_ raw: String) {
         input = raw
