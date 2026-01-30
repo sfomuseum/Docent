@@ -88,7 +88,7 @@ case .failure(let err):
 
 ### FoundationModels
 
-To use the built-in "Foundation" models that ship with AppleOS 26 devices create a new `Parser` instance using the following syntax:
+To use the built-in "Foundation" models that ship with AppleOS 26 devices you would use the following syntax:
 
 ```
 foundation://
@@ -96,7 +96,7 @@ foundation://
 
 ### MLX
 
-To use models available from HuggingFace and manipulated using the Apple [MLX Swift libraries](https://github.com/ml-explore/mlx-swift/) create a new `Parser` instance using the following syntax:
+To use models available from HuggingFace and manipulated using the Apple [MLX Swift libraries](https://github.com/ml-explore/mlx-swift/) you would use the following syntax:
 
 ```
 mlx://?model={MODEL_NAME}
