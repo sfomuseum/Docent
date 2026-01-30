@@ -5,6 +5,6 @@ import ArgumentParser
 struct LabelParser: AsyncParsableCommand {
   static let configuration = CommandConfiguration(
     commandName: "docent",
-    subcommands: [Summarize.self, Label.self, Serve.self, Client.self ],
+    subcommands: [Summarize.self, Label.self, GrpcServer.self, GrpcClient.self ],
   )
 }

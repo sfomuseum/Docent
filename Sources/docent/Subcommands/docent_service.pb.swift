@@ -132,11 +132,20 @@ public struct OrgSfomuseumDocentService_SummarizeTextRequest: Sendable {
 
   public var body: String = String()
 
-  public var maxLength: Int32 = 0
+  public var maxLength: Int32 {
+    get {return _maxLength ?? 0}
+    set {_maxLength = newValue}
+  }
+  /// Returns true if `maxLength` has been explicitly set.
+  public var hasMaxLength: Bool {return self._maxLength != nil}
+  /// Clears the value of `maxLength`. Subsequent reads from it will return its default value.
+  public mutating func clearMaxLength() {self._maxLength = nil}
 
   public var unknownFields = SwiftProtobuf.UnknownStorage()
 
   public init() {}
+
+  fileprivate var _maxLength: Int32? = nil
 }
 
 public struct OrgSfomuseumDocentService_SummarizeTextResponse: Sendable {
@@ -290,25 +299,29 @@ extension OrgSfomuseumDocentService_SummarizeTextRequest: SwiftProtobuf.Message,
       // enabled. https://github.com/apple/swift-protobuf/issues/1034
       switch fieldNumber {
       case 1: try { try decoder.decodeSingularStringField(value: &self.body) }()
-      case 2: try { try decoder.decodeSingularInt32Field(value: &self.maxLength) }()
+      case 2: try { try decoder.decodeSingularInt32Field(value: &self._maxLength) }()
       default: break
       }
     }
   }
 
   public func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
+    // The use of inline closures is to circumvent an issue where the compiler
+    // allocates stack space for every if/case branch local when no optimizations
+    // are enabled. https://github.com/apple/swift-protobuf/issues/1034 and
+    // https://github.com/apple/swift-protobuf/issues/1182
     if !self.body.isEmpty {
       try visitor.visitSingularStringField(value: self.body, fieldNumber: 1)
     }
-    if self.maxLength != 0 {
-      try visitor.visitSingularInt32Field(value: self.maxLength, fieldNumber: 2)
-    }
+    try { if let v = self._maxLength {
+      try visitor.visitSingularInt32Field(value: v, fieldNumber: 2)
+    } }()
     try unknownFields.traverse(visitor: &visitor)
   }
 
   public static func ==(lhs: OrgSfomuseumDocentService_SummarizeTextRequest, rhs: OrgSfomuseumDocentService_SummarizeTextRequest) -> Bool {
     if lhs.body != rhs.body {return false}
-    if lhs.maxLength != rhs.maxLength {return false}
+    if lhs._maxLength != rhs._maxLength {return false}
     if lhs.unknownFields != rhs.unknownFields {return false}
     return true
   }

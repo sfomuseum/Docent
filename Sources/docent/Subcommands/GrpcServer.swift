@@ -6,10 +6,13 @@ import Summarizer
 import GRPCCore
 import GRPCNIOTransportHTTP2
 import GRPCProtobuf
+import MLXLMCommon
 
-enum ServeError: Error, LocalizedError {
+enum GrpcServerError: Error, LocalizedError {
     case invalidEncoderURI
     case invalidText
+    case invalidURI
+    case missingModel
     
     public var errorDescription: String? {
         switch self {
@@ -17,6 +20,10 @@ enum ServeError: Error, LocalizedError {
             return "Failed to construct encoder URI from model(s)."
         case .invalidText:
             return "Input text is invalid."
+        case .invalidURI:
+            return "Invalid URI (failed to parse)"
+        case .missingModel:
+            return "Missing ?model= parameter"
         }
     }
 }
@@ -24,15 +31,17 @@ enum ServeError: Error, LocalizedError {
 class Tools: @unchecked Sendable {
     final var LabelParser: Parser
     final var Summarizer: Summarizer
+    final var SummarizerMaxLength: Int
     
-    init(LabelParser: Parser, Summarizer: Summarizer) {
+    init(LabelParser: Parser, Summarizer: Summarizer, SummarizerMaxLength: Int) {
         self.LabelParser = LabelParser
         self.Summarizer = Summarizer
+        self.SummarizerMaxLength = SummarizerMaxLength
     }
 }
 
-struct Serve: AsyncParsableCommand {
-    static let configuration = CommandConfiguration(abstract: "....")
+struct GrpcServer: AsyncParsableCommand {
+    static let configuration = CommandConfiguration(abstract: "gRPC server for exposing \"docent\"-related tasks.")
     
     @Option(help: "The host name to listen for new connections")
     var host: String = "127.0.0.1"
@@ -40,11 +49,14 @@ struct Serve: AsyncParsableCommand {
     @Option(help: "The port to listen on")
     var port: Int = 8080
     
-    @Option(help: "...")
-    var label_parser_uri: String = default_label_parser_uri 
+    @Option(help: "A URI denoting the framework and model to use for parsing wall labels.")
+    var label_parser_uri: String = default_label_parser_uri
     
-    @Option(help: "...")
+    @Option(help: "A URI denoting the framework and model to use for summarizing text.")
     var summarizer_uri: String = default_summarizer_uri
+    
+    @Option(help: "The default value and maximum length for summary texts.")
+    var summarizer_max_length: Int = 77
     
     @Option(help: "Sets the maximum message size in bytes the server may receive. If 0 then the swift-grpc defaults will be used.")
     var max_receive_message_length = 0
@@ -115,10 +127,50 @@ struct Serve: AsyncParsableCommand {
         
         do {
             
-            label_parser = try await NewParser(label_parser_uri, logger: logger)
-            summarizer = try await NewSummarizer(summarizer_uri, logger: logger)
+            if label_parser_uri == summarizer_uri && label_parser_uri.starts(with: "mlx://"){
+                
+                // START OF I am not happy to have to do it this way
+                // but the mechanics of Swift's Sendable/concurrency stuff forces it
+                
+                guard let u = URL(string: label_parser_uri) else {
+                    throw GrpcServerError.invalidURI
+                }
+                
+                guard let components = URLComponents(url: u, resolvingAgainstBaseURL: false) else {
+                    throw GrpcServerError.invalidURI
+                }
+                
+                guard let model_name = components.queryItems?.first(where: { $0.name == "model" })?.value else {
+                    throw GrpcServerError.missingModel
+                }
+                
+                logger.debug("Instantiate tools from shared model \(model_name)")
+                
+                var model: ModelContext?
+                let model_logger = logger
+                
+                do {
+                    model = try await loadModel(id: model_name, progressHandler: { status in
+                        model_logger.debug("Loading \(model_name) \(status.fractionCompleted * 100)% complete")
+                    })
+                } catch {
+                    logger.error("Failed to load model \(model_name), \(error)")
+                    throw error
+                }
+
+                let instructions = default_label_parser_instructions + not_generable_label_parser_instructions
+                
+                label_parser = try await MLXParser(model!, instructions: instructions, logger: logger)
+                summarizer = try await MLXSummarizer(model!, logger: logger)
+                
+                // END OF I am not happy to have to do it this way
+                
+            } else {
+                label_parser = try await NewParser(label_parser_uri, logger: logger)
+                summarizer = try await NewSummarizer(summarizer_uri, logger: logger)
+            }
             
-            tools = Tools(LabelParser: label_parser!, Summarizer: summarizer!)
+            tools = Tools(LabelParser: label_parser!, Summarizer: summarizer!, SummarizerMaxLength: summarizer_max_length)
         } catch {
             logger.error("Failed to configure tools")
             throw error
@@ -192,7 +244,19 @@ struct DocentService: OrgSfomuseumDocentService_DocentService.SimpleServiceProto
             logger.info("Time to summary text \(t2.timeIntervalSince(t1)) seconds")
         }
         
-        let rsp = await self.tools.Summarizer.summarize(text: request.body, maxLength: Int(request.maxLength))
+        var max_len = tools.SummarizerMaxLength
+        
+        if request.hasMaxLength {
+        
+            if request.maxLength > tools.SummarizerMaxLength {
+                throw RPCError(code: .invalidArgument, message: "Invalid max length")
+            }
+            
+            max_len = Int(request.maxLength)
+        }
+        
+        
+        let rsp = await self.tools.Summarizer.summarize(text: request.body, maxLength: max_len)
         
         switch rsp {
         case .failure(let error):

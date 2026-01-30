@@ -5,9 +5,19 @@ import GRPCCore
 import GRPCNIOTransportHTTP2
 import Logging
 
+enum GrpcClientError: Error, LocalizedError {
+    case invalidAction
+    
+    public var errorDescription: String? {
+        switch self {
+        case .invalidAction:
+            return "Invalid or unsupported action."
+        }
+    }
+}
 
-struct Client: AsyncParsableCommand {
-    static let configuration = CommandConfiguration(abstract: "...")
+struct GrpcClient: AsyncParsableCommand {
+    static let configuration = CommandConfiguration(abstract: "gRPC client for interacting with a \"docent\" server.")
     
     @Option(help: "The host name for the gRPC server.")
     var host: String = "127.0.0.1"
@@ -17,6 +27,9 @@ struct Client: AsyncParsableCommand {
     
     @Option(help: "Enable verbose logging")
     var verbose: Bool = false
+    
+    @Option(help:"The gRPC server to invoke. Valid options are: label-parser, summarize.")
+    var action: String = ""
     
     @Argument(help: "The text to generate embeddings for. If \"-\" then data is read from STDIN. If the first argument is a valid path to a local file then the text of that file will be used. Otherwise all remaining arguments will be concatenated (with a space) and used as the text to generate embeddings for.")
     var args: [String]
@@ -38,8 +51,6 @@ struct Client: AsyncParsableCommand {
             
         ) { client in
             
-            logger.info("Derive text embeddings")
-            
             var input: String
             
             do {
@@ -48,16 +59,31 @@ struct Client: AsyncParsableCommand {
                 logger.error("Failed to derive text from args \(error)")
                 throw error
             }
-            
-            var req = OrgSfomuseumDocentService_SummarizeTextRequest()
-            req.body = input
-            req.maxLength = 77
-            
-            let server = OrgSfomuseumDocentService_DocentService.Client(wrapping: client)
 
-            let rsp = try await server.summarizeText(req)
-            print(rsp.body)
-
+            switch action {
+            case "summarize":
+                
+                var req = OrgSfomuseumDocentService_SummarizeTextRequest()
+                req.body = input
+                
+                let server = OrgSfomuseumDocentService_DocentService.Client(wrapping: client)
+                
+                let rsp = try await server.summarizeText(req)
+                print(rsp.body)
+                
+            case "label-parser":
+                
+                var req = OrgSfomuseumDocentService_ParseWallLabelRequest()
+                req.body = input
+                
+                let server = OrgSfomuseumDocentService_DocentService.Client(wrapping: client)
+                let rsp = try await server.parseWallLabel(req)
+                
+                print(rsp.body)
+                
+            default:
+                throw GrpcClientError.invalidAction
+            }
         }
         
     }
