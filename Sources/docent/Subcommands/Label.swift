@@ -12,7 +12,7 @@ struct Label: AsyncParsableCommand {
     static let configuration = CommandConfiguration(abstract: "Parse the text of a wall label in to JSON-encoded structured data.")
     
     @Option(help: "The parser scheme is to use for parsing wall label text.")
-    var parser_uri: String = "mlx://?model=mlx-community/Olmo-3-7B-Instruct-8bit"
+    var parser_uri: String = default_label_parser_uri 
     
     @Option(help: "The label text to parse in to structured data.")
     var label_text: String = ""
