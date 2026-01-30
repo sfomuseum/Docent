@@ -100,6 +100,14 @@ mlx://?model={MODEL_NAME}
 
 _See the [ml-explore/mlx-swift-lm](https://github.com/ml-explore/mlx-swift-lm) package, which is what does all the "heavy lifting", for details._
 
+### Disabled
+
+The disable a tool or service use the following syntax:
+
+```
+disabled://
+```
+
 ## Tools
 
 ### docent
