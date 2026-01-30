@@ -7,10 +7,6 @@ Swift package for "museum-related" tasks using on-device machine learning (large
 
 _This package used to be called `WallLabel` but was renamed to be less specific._
 
-## Background
-
-[WallLabel – Experiments with Apple's open source machine-learning frameworks](https://millsfield.sfomuseum.org/blog/2025/10/29/label/)
-
 ## Motivation
 
 This is a Swift package for "museum-related" tasks using on-device machine learning (large language) models. The definition of "museum-related" is vague and debateable but SFO Museum is a museum and these tools target things we do so there you go.
@@ -88,7 +84,7 @@ case .failure(let err):
 
 ### FoundationModels
 
-To use the built-in "Foundation" models that ship with AppleOS 26 devices you would use the following syntax:
+To use the built-in "Foundation" models that ship with AppleOS 26 devices create a new `Parser` instance using the following syntax:
 
 ```
 foundation://
@@ -96,7 +92,7 @@ foundation://
 
 ### MLX
 
-To use models available from HuggingFace and manipulated using the Apple [MLX Swift libraries](https://github.com/ml-explore/mlx-swift/) you would use the following syntax:
+To use models available from HuggingFace and manipulated using the Apple [MLX Swift libraries](https://github.com/ml-explore/mlx-swift/) create a new `Parser` instance using the following syntax:
 
 ```
 mlx://?model={MODEL_NAME}
@@ -149,6 +145,7 @@ For example:
 $> docent label --verbose=true --label_text "Honeywell CT87K Round Heat-Only Manual Current production model introduced in 1953 Designed by Henry Dreyfuss Associates (USA, founded Manufactured by Honeywell, Inc. (Minneapolis, Minnesota, USA) Plastic, mechanical and electrical components, lithium battery, mercury-free thermostat dials, domestic, consumer, interface, interaction, personal environmental control Purchased from manufacturer. Henry Dreyfuss began designing the Honeywell Round Thermostat in 1943. He observed that rectangular thermostats often sit crooked on the wall; a round device would properly. The Honeywell be easier to install Round, released a allows users decade later, to adjust temperature with a simple twist of the dial. Dreyfuss's design also promoted customization: users could remove the protective cover and paint the device to match the room. Today, the Honeywell Round remains one of the world's most ubiquitous thermostats." | jq
 
 2026-01-29T13:16:52-0800 debug org.sfomuseum.docent.label: [WallLabel] Loading mlx-community/Olmo-3-7B-Instruct-8bit 100.0% complete
+2026-01-29T13:17:07-0800 debug org.sfomuseum.docent.label: [WallLabel] {"title": "Honeywell CT87K Round Heat-Only Manual Thermostat", "date": "1953", "creator": "Honeywell, Inc.", "creditline": "Purchased from manufacturer; designed by Henry Dreyfuss Associates (USA); manufactured by Honeywell, Inc. (Minneapolis, Minnesota, USA)", "location": "", "medium": "Plastic, mechanical and electrical components, lithium battery, mercury-free thermostat dials", "accession_number": "", "input": "Honeywell CT87K Round Heat-Only Manual current model introduced in 1953 Designed by Henry Dreyfuss Associates (USA, founded) Manufactured by Honeywell, Inc. (Minneapolis, Minnesota, USA) Plastic, mechanical and electrical components, lithium battery, mercury-free thermostat dials, domestic, consumer, interface, interaction, personal environmental control Purchased from manufacturer. Henry Dreyfuss began designing the Honeywell Round Thermostat in 1943. It was designed to sit straight on the wall and allow easy temperature adjustment with a twist of the dial. The design also allowed for customization by removing the cover to paint the device."}
 2026-01-29T13:17:07-0800 debug org.sfomuseum.docent.label: [WallLabel] Time to parse wall label 13.41082501411438 seconds
 
 {
@@ -238,6 +235,68 @@ A couple things to note:
 
 1. The use `xcodebuild` to compile tools. That's because the MLX libraries depend on compiling a `default.metallib` file which a plain-vanilla `swift build` command doesn't know how to do.
 2. The use of the `Release` target which is what appears to be necessary to bundle said `default.metallib` with the final binary. At least I think that's why. The documentation around bundling Metal shaders with command line tools is a bit confusing to me still.
+
+#### Packaging and signing
+
+Likewise to building a binary release, signing and packaging that binary is a bit involved. Specifically, it requires copying both the binary and the auto-generated `mlx-swift_Cmlx.bundle` bundle in to the package "root" before calling `pkgbuild`. As mentioned above I have not done work to automate parsing out the final build folder (`/DerivedData/Docent-{SOME_RANDOM_STRING}`) from the `xcodebuild` command used to build the binary.
+
+Below is an example shell script for automating most (but not all) of the signing, package and notarizing dance. Two things to note:
+
+1. The five variables at the top of the script. You will need to update these per your circumstances.
+2. The shell script assumes that it is in the root directory of the `Docent` repository and calls the `macos` Makefile target (described above) to build the initial binary (that will be signed and notarized).
+
+```
+ARCH=arm64
+VERSION=YOUR_VERSION_NUMBER
+BUILDROOT=YOUR_BUILD_PRODUCTS_RELEASE_FOLDER
+IDENTIFIER=YOUR_APPLE_DEVELOPER_IDENTIFIER
+KEYCHAIN_PROFILE=YOUR_NOTARYTOOL_PROFILE
+
+echo "Build verion ${VERSION} for ${ARCH}"
+
+mkdir -p dist
+
+rm -rf .build
+mkdir -p .build/pkgroot
+
+echo "Build release"
+
+make macos
+
+echo "Codesign"
+
+codesign \
+    --sign "${IDENTIFIER}" \
+    --options runtime \
+    --timestamp \
+    ${BUILDROOT}/docent
+
+cp ${BUILDROOT}/docent .build/pkgroot/
+cp -r ${BUILDROOT}/mlx-swift_Cmlx.bundle .build/pkgroot/
+
+echo "Package build"
+
+pkgbuild \
+    --root .build/pkgroot \
+    --identifier org.sfomuseum.docent \
+    --version ${VERSION} \
+    --install-location /usr/local/bin docent-${ARCH}-${VERSION}.pkg
+
+echo "Product build"
+
+productbuild \
+    --package docent-${ARCH}-${VERSION}.pkg \
+    --identifier org.sfomuseum.docentc \
+    --version ${VERSION} \
+    --sign "${IDENTIFIER}" \
+    dist/docent-${ARCH}-${VERSION}.pkg
+
+rm docent-${ARCH}-${VERSION}.pkg
+
+echo "Build complete. You will still need to submit the build for notirization:"
+echo "-------------------------------------------------------------------------"
+echo xcrun notarytool submit dist/docent-${ARCH}-${VERSION}.pkg --keychain-profile ${KEYCHAIN_PROFILE} --wait
+```
 
 ## See also:
 
