@@ -32,5 +32,8 @@ public struct DisabledParser: Parser {
         return .failure(DisabledParserErrors.disabled)
     }
 
+    public func model() -> String {
+        return "n/a"
+    }
 }
 

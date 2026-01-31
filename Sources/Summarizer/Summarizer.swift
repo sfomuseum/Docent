@@ -12,6 +12,7 @@ public protocol Summarizer {
     
     init(_ summarizer_uri: String, logger: Logger?) async throws
     func summarize(text: String, maxLength: Int) async -> Result<String, Error>
+    func model() -> String
 }
 
 public func NewSummarizer(_ summarizer_uri: String, logger: Logger?) async throws -> Summarizer {

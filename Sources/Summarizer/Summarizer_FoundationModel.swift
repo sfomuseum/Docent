@@ -7,9 +7,13 @@ import Logging
 struct FoundationModelSummarizer: Summarizer {
     
     var logger: Logger?
+    var model_name: String
     
     init(_ summarizer_uri: String, logger: Logger?) async throws {
         self.logger = logger
+        
+        let proc = ProcessInfo()
+        self.model_name = String(format:"apple/foundationmodels#%@", proc.operatingSystemVersionString)
     }
     
     func summarize(text: String, maxLength: Int) async -> Result<String, any Error> {
@@ -40,6 +44,8 @@ struct FoundationModelSummarizer: Summarizer {
 
     }
     
-    
+    public func model() -> String {
+        return model_name
+    }
     
 }

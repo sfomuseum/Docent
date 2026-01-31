@@ -23,7 +23,8 @@ public struct MLXParser: Parser {
     
     var instructions: String
     var logger: Logger?
-    var model: ModelContext
+    var model_name: String
+    var model_context: ModelContext
     
     public init(_ parser_uri: String, instructions: String, logger: Logger?) async throws {
         
@@ -39,13 +40,11 @@ public struct MLXParser: Parser {
             throw MLXParserErrors.missingModel
         }
 
-        var model: ModelContext?
+        var model_context: ModelContext?
         
         do {
-
-            // model = try await ModelContextCache.shared.loadModelContext(model_name, logger: logger)
             
-            model = try await loadModel(id: model_name, progressHandler: { status in
+            model_context = try await loadModel(id: model_name, progressHandler: { status in
                 logger?.debug("Loading \(model_name) \(status.fractionCompleted * 100)% complete")
             })
             
@@ -55,12 +54,14 @@ public struct MLXParser: Parser {
         
         self.instructions = instructions
         self.logger = logger
-        self.model = model!
+        self.model_name = model_name
+        self.model_context = model_context!
     }
     
-    public init(_ model: ModelContext, instructions: String, logger: Logger?) async throws {
+    public init(_ model_context: ModelContext, instructions: String, logger: Logger?) async throws {
         self.instructions = instructions
-        self.model = model
+        self.model_context = model_context
+        self.model_name = model_context.configuration.name // ??
         self.logger = logger
     }
     
@@ -75,7 +76,7 @@ public struct MLXParser: Parser {
         
         let prompt =  text
         
-        let session = ChatSession(self.model)
+        let session = ChatSession(self.model_context)
         let result: String
                        
         do {
@@ -106,5 +107,8 @@ public struct MLXParser: Parser {
         
     }
 
+    public func model() -> String {
+        return model_name
+    }
 }
 

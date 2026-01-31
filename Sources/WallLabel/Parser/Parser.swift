@@ -10,8 +10,8 @@ public enum ParserErrors: Error {
 public protocol Parser {
     
     init(_ parser_uri: String, instructions: String, logger: Logger?) async throws
-    
     func parse(text: String) async -> Result<WallLabel, Error>
+    func model() -> String
 }
 
 public func NewParser(_ parser_uri: String, logger: Logger?) async throws -> Parser {

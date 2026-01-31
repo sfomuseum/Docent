@@ -22,7 +22,8 @@ enum MLXSummarizerErrors: Error {
 public struct MLXSummarizer: Summarizer {
     
     var logger: Logger?
-    var model: ModelContext
+    var model_name: String
+    var model_context: ModelContext
     
     public init(_ Summarizer_uri: String, logger: Logger?) async throws {
         
@@ -38,10 +39,10 @@ public struct MLXSummarizer: Summarizer {
             throw MLXSummarizerErrors.missingModel
         }
         
-        var model: ModelContext?
+        var model_context: ModelContext?
         
         do {
-            model = try await loadModel(id: model_name, progressHandler: { status in
+            model_context = try await loadModel(id: model_name, progressHandler: { status in
                 logger?.debug("Loading \(model_name) \(status.fractionCompleted * 100)% complete")
             })
         } catch {
@@ -49,11 +50,13 @@ public struct MLXSummarizer: Summarizer {
         }
         
         self.logger = logger
-        self.model = model!
+        self.model_name = model_name
+        self.model_context = model_context!
     }
     
-    public init(_ model: ModelContext, logger: Logger?) async throws {
-        self.model = model
+    public init(_ model_context: ModelContext, logger: Logger?) async throws {
+        self.model_context = model_context
+        self.model_name = model_context.configuration.name // ??
         self.logger = logger
     }
     
@@ -69,7 +72,7 @@ public struct MLXSummarizer: Summarizer {
         let local_instructions = instructions.replacingOccurrences(of: "{MAX_LENGTH}", with: "\(maxLength)")
         let prompt = text
         
-        let session = ChatSession(self.model)
+        let session = ChatSession(self.model_context)
         let result: String
                         
         do {
@@ -83,5 +86,8 @@ public struct MLXSummarizer: Summarizer {
         return .success(result)
     }
 
+    public func model() -> String {
+        return model_name
+    }
 }
 
