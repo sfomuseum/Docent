@@ -1,0 +1,35 @@
+syntax = "proto3";
+
+package org_sfomuseum_docent_service;
+
+service DocentService {
+    rpc ParseWallLabel(ParseWallLabelRequest) returns (ParseWallLabelResponse) {}
+    rpc SummarizeText(SummarizeTextRequest) returns (SummarizeTextResponse) {}
+}
+
+message WallLabel {
+    optional string title = 1;
+    optional string date = 2;
+    optional string creator = 3;
+    optional string creditline = 4;
+    optional string location = 5;
+    optional string medium = 6;
+    optional string accession_number = 7;
+}
+
+message ParseWallLabelRequest {
+    string body = 1;
+}
+
+message ParseWallLabelResponse {
+    string body = 1;
+}
+
+message SummarizeTextRequest {
+    string body = 1;
+    optional int32 max_length = 2;
+}
+
+message SummarizeTextResponse {
+    string body = 1;
+}

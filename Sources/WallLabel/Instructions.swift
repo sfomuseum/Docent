@@ -1,8 +1,8 @@
 
-public let default_instructions: String = """
+public let default_label_parser_instructions: String = """
          Parse this text as though it were a wall label in a museum describing an object. Wall labels are typically structured as follows: name, date, creator, location, media, credit line and accession number. Usually each property is on a separate line but sometimes, in the case of name and date, they will be combined on the same line. Some properties, like creator, location and media are not always present. Sometimes titles may have leading numbers, followed by a space, acting as a key between the wall label and the surface the object is mounted on. Remove these numbers if present. Generate the result as a JSON-encoded dictionary of key-value pairs, storing all values as strings.         
          """
 
-public let not_generable_instructions: String = """
+public let not_generable_label_parser_instructions: String = """
           Assign the object title the key "title". Assign the object date the key "date". Assign the object creator (artist, manufacturer or company) a "creator" key. Assign the object credit line a "creditline" key. Assign the object location a "location" key. Assign the object media a "medium" key. Assign the accession number (primary identifier) an "accession_number" key. Assign an empty "input" key. Ensure that all keys (title, date, creator, creditline, location, medium, accession_number, input) are present and assigned empty string values if they can not be derived from the source text. Do not assign any besides: title, date, creator, creditline, location, medium, accession_number, input. The value of the input key should be the original text that was parsed in to structured data. DO NOT WRAP THE JSON IN MARKDOWN OR ANY OTHER FORMATTING.
 """

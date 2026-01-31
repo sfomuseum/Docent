@@ -5,6 +5,7 @@ public enum SummarizerErrors: Error {
     case invalidURI
     case unsupportedSummarizer
     case invalidSummarizer
+    case missingModel
 }
 
 public protocol Summarizer {
@@ -25,6 +26,8 @@ public func NewSummarizer(_ summarizer_uri: String, logger: Logger?) async throw
         switch (u.scheme) {
         case "mlx":
             summarizer = try await MLXSummarizer(summarizer_uri, logger: logger)
+        case "disabled":
+            summarizer =  try DisabledSummarizer(summarizer_uri, logger: logger)
         case "foundation":
             
             if #available(iOS 26.0, macOS 26.0, *) {

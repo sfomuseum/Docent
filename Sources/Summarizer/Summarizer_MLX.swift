@@ -8,6 +8,15 @@ import MLXLMCommon
 enum MLXSummarizerErrors: Error {
     case missingModel
     case unknownModel
+    
+    public var errorDescription: String? {
+        switch self {
+        case .missingModel:
+            return "URI is missing ?model= parameter"
+        case .unknownModel:
+            return "Invalid or unsupported model"
+        }
+    }
 }
     
 public struct MLXSummarizer: Summarizer {
@@ -41,6 +50,11 @@ public struct MLXSummarizer: Summarizer {
         
         self.logger = logger
         self.model = model!
+    }
+    
+    public init(_ model: ModelContext, logger: Logger?) async throws {
+        self.model = model
+        self.logger = logger
     }
     
     public func summarize(text: String, maxLength: Int) async -> Result<String, any Error> {

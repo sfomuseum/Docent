@@ -5,9 +5,18 @@ import MLX
 import MLXLLM
 import MLXLMCommon
 
-enum MLXParserErrors: Error {
+enum MLXParserErrors: Error, LocalizedError {
     case missingModel
     case unknownModel
+    
+    public var errorDescription: String? {
+        switch self {
+        case .missingModel:
+            return "URI is missing ?model= parameter"
+        case .unknownModel:
+            return "Invalid or unsupported model"
+        }
+    }
 }
     
 public struct MLXParser: Parser {
@@ -33,9 +42,13 @@ public struct MLXParser: Parser {
         var model: ModelContext?
         
         do {
+
+            // model = try await ModelContextCache.shared.loadModelContext(model_name, logger: logger)
+            
             model = try await loadModel(id: model_name, progressHandler: { status in
                 logger?.debug("Loading \(model_name) \(status.fractionCompleted * 100)% complete")
             })
+            
         } catch {
             throw error
         }
@@ -43,6 +56,12 @@ public struct MLXParser: Parser {
         self.instructions = instructions
         self.logger = logger
         self.model = model!
+    }
+    
+    public init(_ model: ModelContext, instructions: String, logger: Logger?) async throws {
+        self.instructions = instructions
+        self.model = model
+        self.logger = logger
     }
     
     public func parse(text: String) async -> Result<WallLabel, any Error> {

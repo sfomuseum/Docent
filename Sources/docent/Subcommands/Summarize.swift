@@ -7,7 +7,7 @@ struct Summarize: AsyncParsableCommand {
     static let configuration = CommandConfiguration(abstract: "Command line tool for summarizing text.")
     
     @Option(help: "A URI denoting the framework and model to use for summarizing text.")
-    var summarizer_uri: String = "mlx://?model=mlx-community/Olmo-3-7B-Instruct-8bit"
+    var summarizer_uri: String = default_summarizer_uri
     
     @Option(help: "The text to summarize")
     var text: String = ""

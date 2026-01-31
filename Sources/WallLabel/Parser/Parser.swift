@@ -24,9 +24,9 @@ public func NewParser(_ parser_uri: String, logger: Logger?) async throws -> Par
     
     switch (u.scheme) {
     case "mlx":
-        instructions = default_instructions + not_generable_instructions
+        instructions = default_label_parser_instructions + not_generable_label_parser_instructions
     default:
-        instructions = default_instructions
+        instructions = default_label_parser_instructions
     }
     
     return try await NewParserWithInstructions(parser_uri, instructions: instructions, logger: logger)
@@ -42,6 +42,8 @@ public func NewParserWithInstructions(_ parser_uri: String, instructions: String
     
     do {
         switch (u.scheme) {
+        case "disabled":
+            label_parser = try DisabledParser(parser_uri, instructions: instructions, logger: logger)
         case "mlx":
             label_parser = try await MLXParser(parser_uri, instructions: instructions, logger: logger)
         case "foundation":
