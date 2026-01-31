@@ -13,7 +13,7 @@ This is a Swift package for "museum-related" tasks using on-device machine learn
 
 Currently it supports using the built-in "Foundation" models that ship with AppleOS 26 devices and models available from HuggingFace which are manipulated using the Apple MLX packages (and which run on pre AppleOS 26 devices). Support for manipulating models using the [llama.cpp XCFramework Swift bindings](https://github.com/ggml-org/llama.cpp?tab=readme-ov-file#xcframework) are in the works but incomplete as of this writing.
 
-There’s not any “rocket science” here so think about it more as a reference implementation / demonstration for how do LLM stuff on consumer-grade hardware. Or to be able to compile LLM-based tools down to stand-alone applications that don’t require managing complicated dependency trees.
+There’s not any “rocket science” here so think about it more as a reference implementation and demonstration of how do LLM stuff locally on consumer-grade hardware. Or to be able to compile LLM-based tools down to stand-alone applications that don’t require managing complicated dependency trees.
 
 ## Documentation
 
