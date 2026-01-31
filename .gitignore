@@ -9,3 +9,4 @@ DerivedData/
 *~
 build.sh
 dist
+*.pkg
