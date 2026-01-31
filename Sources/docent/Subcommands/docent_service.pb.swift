@@ -120,6 +120,8 @@ public struct OrgSfomuseumDocentService_ParseWallLabelResponse: Sendable {
 
   public var body: String = String()
 
+  public var model: String = String()
+
   public var unknownFields = SwiftProtobuf.UnknownStorage()
 
   public init() {}
@@ -154,6 +156,8 @@ public struct OrgSfomuseumDocentService_SummarizeTextResponse: Sendable {
   // methods supported on all messages.
 
   public var body: String = String()
+
+  public var model: String = String()
 
   public var unknownFields = SwiftProtobuf.UnknownStorage()
 
@@ -260,7 +264,7 @@ extension OrgSfomuseumDocentService_ParseWallLabelRequest: SwiftProtobuf.Message
 
 extension OrgSfomuseumDocentService_ParseWallLabelResponse: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
   public static let protoMessageName: String = _protobuf_package + ".ParseWallLabelResponse"
-  public static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{1}body\0")
+  public static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{1}body\0\u{1}model\0")
 
   public mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
     while let fieldNumber = try decoder.nextFieldNumber() {
@@ -269,6 +273,7 @@ extension OrgSfomuseumDocentService_ParseWallLabelResponse: SwiftProtobuf.Messag
       // enabled. https://github.com/apple/swift-protobuf/issues/1034
       switch fieldNumber {
       case 1: try { try decoder.decodeSingularStringField(value: &self.body) }()
+      case 2: try { try decoder.decodeSingularStringField(value: &self.model) }()
       default: break
       }
     }
@@ -278,11 +283,15 @@ extension OrgSfomuseumDocentService_ParseWallLabelResponse: SwiftProtobuf.Messag
     if !self.body.isEmpty {
       try visitor.visitSingularStringField(value: self.body, fieldNumber: 1)
     }
+    if !self.model.isEmpty {
+      try visitor.visitSingularStringField(value: self.model, fieldNumber: 2)
+    }
     try unknownFields.traverse(visitor: &visitor)
   }
 
   public static func ==(lhs: OrgSfomuseumDocentService_ParseWallLabelResponse, rhs: OrgSfomuseumDocentService_ParseWallLabelResponse) -> Bool {
     if lhs.body != rhs.body {return false}
+    if lhs.model != rhs.model {return false}
     if lhs.unknownFields != rhs.unknownFields {return false}
     return true
   }
@@ -329,7 +338,7 @@ extension OrgSfomuseumDocentService_SummarizeTextRequest: SwiftProtobuf.Message,
 
 extension OrgSfomuseumDocentService_SummarizeTextResponse: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
   public static let protoMessageName: String = _protobuf_package + ".SummarizeTextResponse"
-  public static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{1}body\0")
+  public static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{1}body\0\u{1}model\0")
 
   public mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
     while let fieldNumber = try decoder.nextFieldNumber() {
@@ -338,6 +347,7 @@ extension OrgSfomuseumDocentService_SummarizeTextResponse: SwiftProtobuf.Message
       // enabled. https://github.com/apple/swift-protobuf/issues/1034
       switch fieldNumber {
       case 1: try { try decoder.decodeSingularStringField(value: &self.body) }()
+      case 2: try { try decoder.decodeSingularStringField(value: &self.model) }()
       default: break
       }
     }
@@ -347,11 +357,15 @@ extension OrgSfomuseumDocentService_SummarizeTextResponse: SwiftProtobuf.Message
     if !self.body.isEmpty {
       try visitor.visitSingularStringField(value: self.body, fieldNumber: 1)
     }
+    if !self.model.isEmpty {
+      try visitor.visitSingularStringField(value: self.model, fieldNumber: 2)
+    }
     try unknownFields.traverse(visitor: &visitor)
   }
 
   public static func ==(lhs: OrgSfomuseumDocentService_SummarizeTextResponse, rhs: OrgSfomuseumDocentService_SummarizeTextResponse) -> Bool {
     if lhs.body != rhs.body {return false}
+    if lhs.model != rhs.model {return false}
     if lhs.unknownFields != rhs.unknownFields {return false}
     return true
   }

@@ -228,6 +228,7 @@ struct DocentService: OrgSfomuseumDocentService_DocentService.SimpleServiceProto
                 
                 var rsp = OrgSfomuseumDocentService_ParseWallLabelResponse()
                 rsp.body = body
+                rsp.model = tools.LabelParser.model()
                 return rsp
             }
             
@@ -266,6 +267,7 @@ struct DocentService: OrgSfomuseumDocentService_DocentService.SimpleServiceProto
             
             var rsp = OrgSfomuseumDocentService_SummarizeTextResponse()
             rsp.body = summary
+            rsp.model = tools.Summarizer.model()
             return rsp
         }
     }
