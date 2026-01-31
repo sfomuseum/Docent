@@ -286,7 +286,27 @@ OPTIONS:
   -h, --help              Show help information.
 ```
 
-For example, here are the summaries of each paragraph in Steve Yegge's [Software Survival 3.0](https://steve-yegge.medium.com/software-survival-3-0-97a2a6255f7b) blog post:
+For example, parsing wall labels:
+
+```
+$> /usr/local/bin/docent grpc-client --action=label-parser "Honeywell CT87K Round Heat-Only Manual Current production model introduced in 1953 Designed by Henry Dreyfuss Associates (USA, founded Manufactured by Honeywell, Inc. (Minneapolis, Minnesota, USA) Plastic, mechanical and electrical components, lithium battery, mercury-free thermostat dials, domestic, consumer, interface, interaction, personal environmental control Purchased from manufacturer. Henry Dreyfuss began designing the Honeywell Round Thermostat in 1943. He observed that rectangular thermostats often sit crooked on the wall; a round device would properly. The Honeywell be easier to install Round, released a allows users decade later, to adjust temperature with a simple twist of the dial. Dreyfuss's design also promoted customization: users could remove the protective cover and paint the device to match the room. Today, the Honeywell Round remains one of the world's most ubiquitous thermostats." | jq
+
+{
+  "date": "1953",
+  "title": "Honeywell CT87K Round Heat-Only Manual Thermostat",
+  "timestamp": 1769819576,
+  "accession_number": "",
+  "latitude": 0,
+  "longitude": 0,
+  "creditline": "Purchased from manufacturer. Designed by Henry Dreyfuss Associates (USA).",
+  "medium": "Plastic, mechanical and electrical components, lithium battery, mercury-free thermostat dials",
+  "input": "Honeywell CT87K Round Heat-Only Manual Current production model introduced in 1953 Designed by Henry Dreyfuss Associates (USA, founded Manufactured by Honeywell, Inc. (Minneapolis, Minnesota, USA) Plastic, mechanical and electrical components, lithium battery, mercury-free thermostat dials, domestic, consumer, interface, interaction, personal environmental control Purchased from manufacturer. Henry Dreyfuss began designing the Honeywell Round Thermostat in 1943. He observed that rectangular thermostats often sit crooked on the wall; a round device would properly. The Honeywell be easier to install Round, released a allows users decade later, to adjust temperature with a simple twist of the dial. Dreyfuss's design also promoted customization: users could remove the protective cover and paint the device to match the room. Today, the Honeywell Round remains one of the world's most ubiquitous thermostats.",
+  "location": "",
+  "creator": "Honeywell, Inc."
+}
+```
+
+Or summarizing text. For example, here are the summaries of each paragraph in Steve Yegge's [Software Survival 3.0](https://steve-yegge.medium.com/software-survival-3-0-97a2a6255f7b) blog post:
 
 ```
 foreach line ( "`cat yegge.txt`" )
@@ -424,7 +444,7 @@ Below is an example shell script for automating most (but not all) of the signin
 ARCH=arm64
 VERSION=YOUR_VERSION_NUMBER
 BUILDROOT=YOUR_BUILD_PRODUCTS_RELEASE_FOLDER
-IDENTIFIER=YOUR_APPLE_DEVELOPER_IDENTIFIER
+DEVELOPER_ID=YOUR_APPLE_DEVELOPER_IDENTIFIER
 KEYCHAIN_PROFILE=YOUR_NOTARYTOOL_PROFILE
 
 echo "Build verion ${VERSION} for ${ARCH}"
@@ -441,7 +461,7 @@ make macos
 echo "Codesign"
 
 codesign \
-    --sign "${IDENTIFIER}" \
+    --sign ""Developer ID Application: ${DEVELOPER_ID}" \
     --options runtime \
     --timestamp \
     ${BUILDROOT}/docent
@@ -461,9 +481,9 @@ echo "Product build"
 
 productbuild \
     --package docent-${ARCH}-${VERSION}.pkg \
-    --identifier org.sfomuseum.docentc \
+    --identifier org.sfomuseum.docent \
     --version ${VERSION} \
-    --sign "${IDENTIFIER}" \
+    --sign "Developer ID Installer: ${DEVELOPER_ID}" \
     dist/docent-${ARCH}-${VERSION}.pkg
 
 rm docent-${ARCH}-${VERSION}.pkg
