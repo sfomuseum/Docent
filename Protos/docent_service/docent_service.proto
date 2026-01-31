@@ -1,6 +1,7 @@
 syntax = "proto3";
 
 package org_sfomuseum_docent_service;
+option go_package = "github.com/sfomuseum/go-docent/grpc";
 
 service DocentService {
     rpc ParseWallLabel(ParseWallLabelRequest) returns (ParseWallLabelResponse) {}
