@@ -28,6 +28,9 @@ struct GrpcClient: AsyncParsableCommand {
     @Option(help: "Enable verbose logging")
     var verbose: Bool = false
     
+    @Option(help: "...")
+    var summarize_max_retries: Int = 1
+    
     @Option(help:"The gRPC server to invoke. Valid options are: label-parser, summarize.")
     var action: String = ""
     
@@ -65,6 +68,7 @@ struct GrpcClient: AsyncParsableCommand {
                 
                 var req = OrgSfomuseumDocentService_SummarizeTextRequest()
                 req.body = input
+                req.maxRetries = Int32(summarize_max_retries)
                 
                 let server = OrgSfomuseumDocentService_DocentService.Client(wrapping: client)
                 

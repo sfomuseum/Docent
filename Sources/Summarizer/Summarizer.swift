@@ -76,7 +76,13 @@ public func SummarizeWithRetries(_ summarizer: Summarizer, _ req: SummarizeWithR
     let t2 = Date()
     let ttc = Int64(t2.timeIntervalSince(t1))
 
-    let rsp = SummarizeWithRetriesResponse(summary: summary, attempts: attempts, timeToComplete: ttc, model: summarizer.model())
+    let rsp = SummarizeWithRetriesResponse(
+        summary: summary,
+        attempts: attempts,
+        timeToComplete: ttc,
+        model: summarizer.model()
+    )
+    
     return .success(rsp)
 }
 
