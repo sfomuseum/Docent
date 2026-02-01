@@ -1,6 +1,6 @@
 import Foundation
 
-public enum TextErrors: Error {
+public enum TextErrors: Error, LocalizedError {
     case missingInput
     case isDirectory
     case dataConversion

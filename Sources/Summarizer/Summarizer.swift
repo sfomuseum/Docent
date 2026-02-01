@@ -13,6 +13,12 @@ public struct SummarizeWithRetriesRequest {
     public var text: String
     public var max_length: Int
     public var max_attempts: Int
+    
+    public init(text: String, max_length: Int, max_attempts: Int) {
+        self.text = text
+        self.max_length = max_length
+        self.max_attempts = max_attempts
+    }
 }
 
 public struct SummarizeWithRetriesResponse {
@@ -20,6 +26,13 @@ public struct SummarizeWithRetriesResponse {
     public var attempts: Int
     public var timeToComplete: Int64
     public var model: String
+    
+    public init(summary: String, attempts: Int, timeToComplete: Int64, model: String) {
+        self.summary = summary
+        self.attempts = attempts
+        self.timeToComplete = timeToComplete
+        self.model = model
+    }
 }
 
 public func SummarizeWithRetries(_ summarizer: Summarizer, _ req: SummarizeWithRetriesRequest, logger: Logger?) async -> Result<SummarizeWithRetriesResponse, Error> {
@@ -27,14 +40,20 @@ public func SummarizeWithRetries(_ summarizer: Summarizer, _ req: SummarizeWithR
     var attempts: Int = 0
     var summary: String = req.text
     
-    var max_length = req.max_length
-    var max_attempts = req.max_attempts
+    let max_length = req.max_length
+    let max_attempts = req.max_attempts
     
     let t1 = Date()
+    
+    defer {
+        let t2 = Date()
+        logger?.debug("Time to summary text with \(attempts) attempts, \(t2.timeIntervalSince(t1)) seconds")
+    }
     
     while attempts == 0 || summary.count > max_length {
         
         attempts += 1
+        logger?.debug("Summarize text \(attempts)/\(max_attempts) text length is \(summary.count)")
         
         let rsp = await summarizer.summarize(text: summary, maxLength: max_length)
         
@@ -44,7 +63,7 @@ public func SummarizeWithRetries(_ summarizer: Summarizer, _ req: SummarizeWithR
         case .success(let text):
             summary = text
         }
-            
+                    
         if summary.count <= max_length {
             break
         }

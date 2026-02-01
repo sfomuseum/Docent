@@ -31,7 +31,7 @@ struct GrpcClient: AsyncParsableCommand {
     @Option(help:"The gRPC server to invoke. Valid options are: label-parser, summarize.")
     var action: String = ""
     
-    @Argument(help: "The text to generate embeddings for. If \"-\" then data is read from STDIN. If the first argument is a valid path to a local file then the text of that file will be used. Otherwise all remaining arguments will be concatenated (with a space) and used as the text to generate embeddings for.")
+    @Argument(help: "The text to operate on. If \"-\" then data is read from STDIN. If the first argument is a valid path to a local file then the text of that file will be used. Otherwise all remaining arguments will be concatenated (with a space) and used as the text to process.")
     var args: [String]
     
     func run() async throws {
