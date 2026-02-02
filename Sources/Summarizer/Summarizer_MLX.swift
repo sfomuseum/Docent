@@ -69,7 +69,7 @@ public struct MLXSummarizer: Summarizer {
             logger?.debug("Time to summarize text \(t2.timeIntervalSince(t1)) seconds")
         }
         
-        let local_instructions = instructions.replacingOccurrences(of: "{MAX_LENGTH}", with: "\(maxLength)")
+        let local_instructions = default_summarizer_instructions.replacingOccurrences(of: "{MAX_LENGTH}", with: "\(maxLength)")
         let prompt = text
         
         let session = ChatSession(self.model_context)

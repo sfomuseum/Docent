@@ -12,7 +12,7 @@ struct Summarize: AsyncParsableCommand {
     @Option(help: "The maximum length of the summary.")
     var max_length: Int = 77
 
-    @Option(help: "The maximum length of ...")
+    @Option(help: "The maximum number of attempts to make summarizing the text to be no longer than the value of the --max_length flag.")
     var max_attempts: Int = 1
     
     @Option(help: "Enable verbose logging")

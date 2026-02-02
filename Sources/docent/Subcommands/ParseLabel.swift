@@ -3,12 +3,21 @@ import ArgumentParser
 import Logging
 import WallLabel
 
-enum ParseErrors: Error {
+enum ParseLabelErrors: Error {
     case invalidParser
     case stringifyError
+    
+    public var errorDescription: String? {
+        switch self {
+        case .invalidParser:
+            return "Invalid or unsupported label parser URI."
+        case .stringifyError:
+            return "Failed to stringify response."
+        }
+    }
 }
 
-struct Label: AsyncParsableCommand {
+struct ParseLabel: AsyncParsableCommand {
     static let configuration = CommandConfiguration(abstract: "Parse the text of a wall label in to JSON-encoded structured data.")
     
     @Option(help: "The parser scheme is to use for parsing wall label text.")
@@ -65,7 +74,7 @@ struct Label: AsyncParsableCommand {
             case .success(let data):
                 
                 guard let str_data = String(data: data, encoding: .utf8) else {
-                    throw ParseErrors.stringifyError
+                    throw ParseLabelErrors.stringifyError
                 }
                 
                 print(str_data)

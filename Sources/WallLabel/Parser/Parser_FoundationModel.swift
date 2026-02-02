@@ -15,7 +15,7 @@ struct FoundationModelParser: Parser {
         let proc = ProcessInfo()
         self.model_name = String(format:"apple/foundationmodels#%@", proc.operatingSystemVersionString)
         
-        self.instructions = instructions
+        self.instructions = default_label_parser_instructions
         self.logger = logger
     }
     
