@@ -32,5 +32,8 @@ public struct DisabledSummarizer: Summarizer {
         return .failure(DisabledSummarizerErrors.disabled)
     }
 
+    public func model() -> String {
+        return "n/a"
+    }
 }
 

@@ -7,10 +7,15 @@ import Logging
 struct FoundationModelParser: Parser {
     
     var instructions: String
+    var model_name: String
     var logger: Logger?
     
     init(_ parser_uri: String, instructions: String, logger: Logger?) throws {
-        self.instructions = instructions
+        
+        let proc = ProcessInfo()
+        self.model_name = String(format:"apple/foundationmodels#%@", proc.operatingSystemVersionString)
+        
+        self.instructions = default_label_parser_instructions
         self.logger = logger
     }
     
@@ -54,6 +59,8 @@ struct FoundationModelParser: Parser {
 
     }
     
-    
+    public func model() -> String {
+        return model_name
+    }
     
 }

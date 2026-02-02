@@ -115,18 +115,18 @@ disabled://
 ### docent
 
 ```
-$> docent <subcommand>
+$> docent -h
+USAGE: docent <subcommand>
 
 OPTIONS:
   -h, --help              Show help information.
 
 SUBCOMMANDS:
   summarize               Command line tool for summarizing text.
-  label                   Parse the text of a wall label in to JSON-encoded structured data.
+  parse-label             Parse the text of a wall label in to JSON-encoded structured data.
   grpc-server             gRPC server for exposing "docent"-related tasks.
-  grpc-client             gRPC client for interacting with a "docent" server.
-
-  See 'docent help <subcommand>' for detailed help.
+  grpc-summarize          gRPC client for interacting with a "docent" server.
+  grpc-parse-label        gRPC client for interacting with a "docent" server to parse a wall label.
 ```  
  
 #### docent label
@@ -134,7 +134,7 @@ SUBCOMMANDS:
 Parse the text of a wall label in to JSON-encoded structured data.
 
 ```
-$> docent label -h
+$> docent parse-label -h
 OVERVIEW: Parse the text of a wall label in to JSON-encoded structured data.
 
 USAGE: docent label [--parser_uri <parser_uri>] [--label_text <label_text>] [--instructions <instructions>] [--verbose <verbose>]
@@ -266,32 +266,31 @@ $> docent grpc-server --verbose=true
 2026-01-30T15:43:57-0800 info org.sfomuseum.docent.grpcd: [docent] Time to summary text 2.1631510257720947 seconds
 ```
 
-#### docent grpc-client
+#### docent grpc-parse-label
 
-gRPC client for interacting with a "docent" server.
+gRPC client for interacting with a "docent" server to parse a wall label.
 
 ```
-$> docent grpc-client -h
+$> grpc-parse-label -h
 OVERVIEW: gRPC client for interacting with a "docent" server.
 
-USAGE: docent grpc-client [--host <host>] [--port <port>] [--verbose <verbose>] [--action <action>] <args> ...
+USAGE: docent grpc-parse-label [--host <host>] [--port <port>] [--verbose <verbose>] <args> ...
 
 ARGUMENTS:
-  <args>                  The text to generate embeddings for. If "-" then data is read from STDIN. If the first argument is a valid path to a local file then the text of that file will
-                          be used. Otherwise all remaining arguments will be concatenated (with a space) and used as the text to generate embeddings for.
+  <args>                  The text to operate on. If "-" then data is read from STDIN. If the first argument is a valid path to a local file then the text of that file will be used.
+                          Otherwise all remaining arguments will be concatenated (with a space) and used as the text to process.
 
 OPTIONS:
   --host <host>           The host name for the gRPC server. (default: 127.0.0.1)
   --port <port>           The port for the gRPC server. (default: 8080)
   --verbose <verbose>     Enable verbose logging (default: false)
-  --action <action>       The gRPC server to invoke. Valid options are: label-parser, summarize.
   -h, --help              Show help information.
 ```
 
 For example, parsing wall labels:
 
 ```
-$> /usr/local/bin/docent grpc-client --action=label-parser "Honeywell CT87K Round Heat-Only Manual Current production model introduced in 1953 Designed by Henry Dreyfuss Associates (USA, founded Manufactured by Honeywell, Inc. (Minneapolis, Minnesota, USA) Plastic, mechanical and electrical components, lithium battery, mercury-free thermostat dials, domestic, consumer, interface, interaction, personal environmental control Purchased from manufacturer. Henry Dreyfuss began designing the Honeywell Round Thermostat in 1943. He observed that rectangular thermostats often sit crooked on the wall; a round device would properly. The Honeywell be easier to install Round, released a allows users decade later, to adjust temperature with a simple twist of the dial. Dreyfuss's design also promoted customization: users could remove the protective cover and paint the device to match the room. Today, the Honeywell Round remains one of the world's most ubiquitous thermostats." | jq
+$> /usr/local/bin/docent grpc-parse-label "Honeywell CT87K Round Heat-Only Manual Current production model introduced in 1953 Designed by Henry Dreyfuss Associates (USA, founded Manufactured by Honeywell, Inc. (Minneapolis, Minnesota, USA) Plastic, mechanical and electrical components, lithium battery, mercury-free thermostat dials, domestic, consumer, interface, interaction, personal environmental control Purchased from manufacturer. Henry Dreyfuss began designing the Honeywell Round Thermostat in 1943. He observed that rectangular thermostats often sit crooked on the wall; a round device would properly. The Honeywell be easier to install Round, released a allows users decade later, to adjust temperature with a simple twist of the dial. Dreyfuss's design also promoted customization: users could remove the protective cover and paint the device to match the room. Today, the Honeywell Round remains one of the world's most ubiquitous thermostats." | jq -r .body
 
 {
   "date": "1953",
@@ -308,11 +307,39 @@ $> /usr/local/bin/docent grpc-client --action=label-parser "Honeywell CT87K Roun
 }
 ```
 
-Or summarizing text. For example, here are the summaries of each paragraph in Steve Yegge's [Software Survival 3.0](https://steve-yegge.medium.com/software-survival-3-0-97a2a6255f7b) blog post:
+_As of this writing, the wall label is returned as a JSON-encoded string in the gRPC response. This may be updated in future releases to return a formal data structure. I am not sure yet._
+
+#### docent grpc-summarize
+
+gRPC client for interacting with a "docent" server to summarize text.
+
+```
+$> docent grpc-summarize -h
+OVERVIEW: gRPC client for interacting with a "docent" server.
+
+USAGE: docent grpc-summarize [--host <host>] [--port <port>] [--verbose <verbose>] [--max_length <max_length>] [--max_retries <max_retries>] <args> ...
+
+ARGUMENTS:
+  <args>                  The text to operate on. If "-" then data is read from STDIN. If the first argument is a valid path to a local file then the text of that file will be used.
+                          Otherwise all remaining arguments will be concatenated (with a space) and used as the text to process.
+
+OPTIONS:
+  --host <host>           The host name for the gRPC server. (default: 127.0.0.1)
+  --port <port>           The port for the gRPC server. (default: 8080)
+  --verbose <verbose>     Enable verbose logging (default: false)
+  --max_length <max_length>
+                          The maximum length of the summary text. This value may be overridden by the gRPC server. (default: 77)
+  --max_retries <max_retries>
+                          The maximum number of attempts to make summarizing the text to be no longer than the value of the --max_length flag. This value may be overridden by the gRPC
+                          server. (default: 1)
+  -h, --help              Show help information.
+```
+
+For example, here are the summaries of each paragraph in Steve Yegge's [Software Survival 3.0](https://steve-yegge.medium.com/software-survival-3-0-97a2a6255f7b) blog post:
 
 ```
 foreach line ( "`cat yegge.txt`" )
-foreach? docent grpc-client --action=summarize $line                             
+foreach? docent grpc-summarize $line | jq -r .body                             
 foreach? end
 
 Wrote AI-assisted software, had success with Beads and Gas Town; recognized AI progress accelerating.
@@ -411,6 +438,14 @@ Return to Gas Town soon, update on rule-breaking in news, visit gastownhall.ai a
 ```
 
 _Note: This example is not really what this tool was written for but it was a silly example that popped up while I was working on things._
+
+To summarize that entire text with retries (because the summary will probably be too long on the first attempt):
+
+```
+$> docent grpc-summarize --max_retries=10 yegge2.txt
+
+{"body":"AI could change software by 2026 via value, fit, simplicity, creativity.","model":"mlx-community/Olmo-3-7B-Instruct-8bit","attempts":9}
+```
 
 #### Building
 

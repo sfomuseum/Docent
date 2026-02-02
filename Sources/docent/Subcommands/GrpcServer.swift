@@ -29,14 +29,16 @@ enum GrpcServerError: Error, LocalizedError {
 }
 
 class Tools: @unchecked Sendable {
-    final var LabelParser: Parser
-    final var Summarizer: Summarizer
-    final var SummarizerMaxLength: Int
+    final var labelParser: Parser
+    final var summarizer: Summarizer
+    final var summarizerMaxLength: Int
+    final var summarizerMaxAttempts: Int
     
-    init(LabelParser: Parser, Summarizer: Summarizer, SummarizerMaxLength: Int) {
-        self.LabelParser = LabelParser
-        self.Summarizer = Summarizer
-        self.SummarizerMaxLength = SummarizerMaxLength
+    init(labelParser: Parser, summarizer: Summarizer, summarizerMaxLength: Int, summarizerMaxAttempts: Int) {
+        self.labelParser = labelParser
+        self.summarizer = summarizer
+        self.summarizerMaxLength = summarizerMaxLength
+        self.summarizerMaxAttempts = summarizerMaxAttempts
     }
 }
 
@@ -57,6 +59,9 @@ struct GrpcServer: AsyncParsableCommand {
     
     @Option(help: "The default value and maximum length for summary texts.")
     var summarizer_max_length: Int = 77
+
+    @Option(help: "The default value and maximum length for retrying text-summarizing.")
+    var summarizer_max_attempts: Int = 20
     
     @Option(help: "Sets the maximum message size in bytes the server may receive. If 0 then the swift-grpc defaults will be used.")
     var max_receive_message_length = 0
@@ -170,7 +175,13 @@ struct GrpcServer: AsyncParsableCommand {
                 summarizer = try await NewSummarizer(summarizer_uri, logger: logger)
             }
             
-            tools = Tools(LabelParser: label_parser!, Summarizer: summarizer!, SummarizerMaxLength: summarizer_max_length)
+            tools = Tools(
+                labelParser: label_parser!,
+                summarizer: summarizer!,
+                summarizerMaxLength: summarizer_max_length,
+                summarizerMaxAttempts: summarizer_max_attempts,
+            )
+            
         } catch {
             logger.error("Failed to configure tools")
             throw error
@@ -207,7 +218,7 @@ struct DocentService: OrgSfomuseumDocentService_DocentService.SimpleServiceProto
             logger.info("Time to parse label text \(t2.timeIntervalSince(t1)) seconds")
         }
         
-        let rsp = await self.tools.LabelParser.parse(text: request.body)
+        let rsp = await self.tools.labelParser.parse(text: request.body)
         
         switch rsp {
         case .failure(let error):
@@ -223,11 +234,12 @@ struct DocentService: OrgSfomuseumDocentService_DocentService.SimpleServiceProto
             case .success(let data):
                 
                 guard let body = String(data: data, encoding: .utf8) else {
-                    throw RPCError(code: .internalError, message: "ARRRGHH")
+                    throw RPCError(code: .internalError, message: "Unable to convert data to string")
                 }
                 
                 var rsp = OrgSfomuseumDocentService_ParseWallLabelResponse()
                 rsp.body = body
+                rsp.model = tools.labelParser.model()
                 return rsp
             }
             
@@ -244,29 +256,48 @@ struct DocentService: OrgSfomuseumDocentService_DocentService.SimpleServiceProto
             logger.info("Time to summary text \(t2.timeIntervalSince(t1)) seconds")
         }
         
-        var max_len = tools.SummarizerMaxLength
+        var max_len = tools.summarizerMaxLength
+        var max_retries = 1
         
         if request.hasMaxLength {
         
-            if request.maxLength > tools.SummarizerMaxLength {
+            if request.maxLength > tools.summarizerMaxLength {
                 throw RPCError(code: .invalidArgument, message: "Invalid max length")
             }
             
             max_len = Int(request.maxLength)
         }
         
-        
-        let rsp = await self.tools.Summarizer.summarize(text: request.body, maxLength: max_len)
-        
-        switch rsp {
-        case .failure(let error):
-            logger.error("Failed to summarize text, \(error)")
-            throw RPCError(code: .internalError, message: error.localizedDescription)
-        case .success(let summary):
+        if request.hasMaxRetries {
             
-            var rsp = OrgSfomuseumDocentService_SummarizeTextResponse()
-            rsp.body = summary
-            return rsp
+            if request.maxRetries > tools.summarizerMaxAttempts {
+                throw RPCError(code: .invalidArgument, message: "Invalid max retries")
+            }
+            
+            logger.debug("Summarize text with \(request.maxRetries) retries")
+            max_retries = Int(request.maxRetries)
         }
+        
+            let req = SummarizeWithRetriesRequest(
+                text: request.body,
+                max_length: max_len,
+                max_attempts: max_retries
+            )
+            
+            let rsp = await SummarizeWithRetries(tools.summarizer, req, logger: logger)
+            
+            switch rsp {
+            case .failure(let error):
+                logger.error("Failed to summarize text, \(error)")
+                throw RPCError(code: .internalError, message: error.localizedDescription)
+            case .success(let sum_rsp):
+                
+                var rsp = OrgSfomuseumDocentService_SummarizeTextResponse()
+                rsp.body = sum_rsp.summary
+                rsp.model = tools.summarizer.model()
+                rsp.attempts = Int32(sum_rsp.attempts)
+                return rsp
+            }
+        
     }
 }

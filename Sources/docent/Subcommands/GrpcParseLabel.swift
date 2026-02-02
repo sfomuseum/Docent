@@ -5,19 +5,8 @@ import GRPCCore
 import GRPCNIOTransportHTTP2
 import Logging
 
-enum GrpcClientError: Error, LocalizedError {
-    case invalidAction
-    
-    public var errorDescription: String? {
-        switch self {
-        case .invalidAction:
-            return "Invalid or unsupported action."
-        }
-    }
-}
-
-struct GrpcClient: AsyncParsableCommand {
-    static let configuration = CommandConfiguration(abstract: "gRPC client for interacting with a \"docent\" server.")
+struct GrpcParseLabel: AsyncParsableCommand {
+    static let configuration = CommandConfiguration(abstract: "gRPC client for interacting with a \"docent\" server to parse a label.")
     
     @Option(help: "The host name for the gRPC server.")
     var host: String = "127.0.0.1"
@@ -28,10 +17,7 @@ struct GrpcClient: AsyncParsableCommand {
     @Option(help: "Enable verbose logging")
     var verbose: Bool = false
     
-    @Option(help:"The gRPC server to invoke. Valid options are: label-parser, summarize.")
-    var action: String = ""
-    
-    @Argument(help: "The text to generate embeddings for. If \"-\" then data is read from STDIN. If the first argument is a valid path to a local file then the text of that file will be used. Otherwise all remaining arguments will be concatenated (with a space) and used as the text to generate embeddings for.")
+    @Argument(help: "The text to operate on. If \"-\" then data is read from STDIN. If the first argument is a valid path to a local file then the text of that file will be used. Otherwise all remaining arguments will be concatenated (with a space) and used as the text to process.")
     var args: [String]
     
     func run() async throws {
@@ -60,18 +46,6 @@ struct GrpcClient: AsyncParsableCommand {
                 throw error
             }
 
-            switch action {
-            case "summarize":
-                
-                var req = OrgSfomuseumDocentService_SummarizeTextRequest()
-                req.body = input
-                
-                let server = OrgSfomuseumDocentService_DocentService.Client(wrapping: client)
-                
-                let rsp = try await server.summarizeText(req)
-                print(rsp.body)
-                
-            case "label-parser":
                 
                 var req = OrgSfomuseumDocentService_ParseWallLabelRequest()
                 req.body = input
@@ -79,10 +53,12 @@ struct GrpcClient: AsyncParsableCommand {
                 let server = OrgSfomuseumDocentService_DocentService.Client(wrapping: client)
                 let rsp = try await server.parseWallLabel(req)
                 
-                print(rsp.body)
-                
-            default:
-                throw GrpcClientError.invalidAction
+                // print(rsp.body)
+
+            do {
+                try print(rsp.jsonString())
+            } catch {
+                throw error
             }
         }
         

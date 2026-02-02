@@ -24,13 +24,17 @@ message ParseWallLabelRequest {
 
 message ParseWallLabelResponse {
     string body = 1;
+    string model = 2;
 }
 
 message SummarizeTextRequest {
     string body = 1;
     optional int32 max_length = 2;
+    optional int32 max_retries = 4;
 }
 
 message SummarizeTextResponse {
     string body = 1;
+    string model = 2;
+    int32 attempts = 3;
 }
