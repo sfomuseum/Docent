@@ -125,7 +125,7 @@ SUBCOMMANDS:
   summarize               Command line tool for summarizing text.
   parse-label             Parse the text of a wall label in to JSON-encoded structured data.
   grpc-server             gRPC server for exposing "docent"-related tasks.
-  grpc-summarize          gRPC client for interacting with a "docent" server to summarize a text.
+  grpc-summarize          gRPC client for interacting with a "docent" server.
   grpc-parse-label        gRPC client for interacting with a "docent" server to parse a wall label.
 ```  
  
@@ -290,7 +290,7 @@ OPTIONS:
 For example, parsing wall labels:
 
 ```
-$> /usr/local/bin/docent grpc-client --action=label-parser "Honeywell CT87K Round Heat-Only Manual Current production model introduced in 1953 Designed by Henry Dreyfuss Associates (USA, founded Manufactured by Honeywell, Inc. (Minneapolis, Minnesota, USA) Plastic, mechanical and electrical components, lithium battery, mercury-free thermostat dials, domestic, consumer, interface, interaction, personal environmental control Purchased from manufacturer. Henry Dreyfuss began designing the Honeywell Round Thermostat in 1943. He observed that rectangular thermostats often sit crooked on the wall; a round device would properly. The Honeywell be easier to install Round, released a allows users decade later, to adjust temperature with a simple twist of the dial. Dreyfuss's design also promoted customization: users could remove the protective cover and paint the device to match the room. Today, the Honeywell Round remains one of the world's most ubiquitous thermostats." | jq
+$> /usr/local/bin/docent grpc-parse-label "Honeywell CT87K Round Heat-Only Manual Current production model introduced in 1953 Designed by Henry Dreyfuss Associates (USA, founded Manufactured by Honeywell, Inc. (Minneapolis, Minnesota, USA) Plastic, mechanical and electrical components, lithium battery, mercury-free thermostat dials, domestic, consumer, interface, interaction, personal environmental control Purchased from manufacturer. Henry Dreyfuss began designing the Honeywell Round Thermostat in 1943. He observed that rectangular thermostats often sit crooked on the wall; a round device would properly. The Honeywell be easier to install Round, released a allows users decade later, to adjust temperature with a simple twist of the dial. Dreyfuss's design also promoted customization: users could remove the protective cover and paint the device to match the room. Today, the Honeywell Round remains one of the world's most ubiquitous thermostats." | jq -r .body
 
 {
   "date": "1953",
@@ -306,6 +306,8 @@ $> /usr/local/bin/docent grpc-client --action=label-parser "Honeywell CT87K Roun
   "creator": "Honeywell, Inc."
 }
 ```
+
+_As of this writing, the wall label is returned as a JSON-encoded string in the gRPC response. This may be updated in future releases to return a formal data structure. I am not sure yet._
 
 #### docent grpc-summarize
 

@@ -53,8 +53,13 @@ struct GrpcParseLabel: AsyncParsableCommand {
                 let server = OrgSfomuseumDocentService_DocentService.Client(wrapping: client)
                 let rsp = try await server.parseWallLabel(req)
                 
-                print(rsp.body)
+                // print(rsp.body)
 
+            do {
+                try print(rsp.jsonString())
+            } catch {
+                throw error
+            }
         }
         
     }
