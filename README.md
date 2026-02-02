@@ -105,8 +105,8 @@ Valid query parameters are:
 | Name | Type | Required | Notes | 
 | --- | --- | --- | --- |
 | model | string | yes | The name of the HuggingFace model to use. |
-| downloads | string | no | `file://` URI denoting custom location where HuggingFace models are cached. |
-
+| downloads | string | no | "file://" URI denoting custom location where HuggingFace models are cached. |
+
 _See the [ml-explore/mlx-swift-lm](https://github.com/ml-explore/mlx-swift-lm) package, which is what does all the "heavy lifting", for details._
 
 ### Disabled
