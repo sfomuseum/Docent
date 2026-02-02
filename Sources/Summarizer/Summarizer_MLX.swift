@@ -4,10 +4,12 @@ import Logging
 import MLX
 import MLXLLM
 import MLXLMCommon
+import Hub
 
 enum MLXSummarizerErrors: Error {
     case missingModel
     case unknownModel
+    case invalidDownloadLocation
     
     public var errorDescription: String? {
         switch self {
@@ -15,6 +17,8 @@ enum MLXSummarizerErrors: Error {
             return "URI is missing ?model= parameter"
         case .unknownModel:
             return "Invalid or unsupported model"
+        case .invalidDownloadLocation:
+            return "Invalid download location"
         }
     }
 }
@@ -39,10 +43,22 @@ public struct MLXSummarizer: Summarizer {
             throw MLXSummarizerErrors.missingModel
         }
         
+        var hub = defaultHubApi
+    
+        if let downloads = components.queryItems?.first(where: { $0.name == "downloads" })?.value {
+            
+            guard let downloads_url = URL(string: downloads) else {
+                throw MLXSummarizerErrors.invalidDownloadLocation
+            }
+            
+            logger?.debug("Use custom downloads location \(downloads_url.absoluteString)")
+            hub = HubApi(downloadBase: downloads_url)
+        }
+        
         var model_context: ModelContext?
         
         do {
-            model_context = try await loadModel(id: model_name, progressHandler: { status in
+            model_context = try await loadModel(hub: hub, id: model_name, progressHandler: { status in
                 logger?.debug("Loading \(model_name) \(status.fractionCompleted * 100)% complete")
             })
         } catch {

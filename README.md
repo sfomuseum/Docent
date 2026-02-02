@@ -100,6 +100,13 @@ To use models available from HuggingFace and manipulated using the Apple [MLX Sw
 mlx://?model={MODEL_NAME}
 ```
 
+Valid query parameters are:
+
+| Name | Type | Required | Notes | 
+| --- | --- | --- | --- |
+| model | string | yes | The name of the HuggingFace model to use. |
+| downloads | string | no | `file://` URI denoting custom location where HuggingFace models are cached. |
+
 _See the [ml-explore/mlx-swift-lm](https://github.com/ml-explore/mlx-swift-lm) package, which is what does all the "heavy lifting", for details._
 
 ### Disabled
@@ -271,10 +278,10 @@ $> docent grpc-server --verbose=true
 gRPC client for interacting with a "docent" server to parse a wall label.
 
 ```
-$> grpc-parse-label -h
-OVERVIEW: gRPC client for interacting with a "docent" server.
+$> docent grpc-parse-label -h
+OVERVIEW: gRPC client for interacting with a "docent" server to parse a label.
 
-USAGE: docent grpc-parse-label [--host <host>] [--port <port>] [--verbose <verbose>] <args> ...
+USAGE: docent grpc-parse-label [--host <host>] [--port <port>] [--tls_certificate <tls_certificate>] [--verbose <verbose>] <args> ...
 
 ARGUMENTS:
   <args>                  The text to operate on. If "-" then data is read from STDIN. If the first argument is a valid path to a local file then the text of that file will be used.
@@ -283,6 +290,8 @@ ARGUMENTS:
 OPTIONS:
   --host <host>           The host name for the gRPC server. (default: 127.0.0.1)
   --port <port>           The port for the gRPC server. (default: 8080)
+  --tls_certificate <tls_certificate>
+                          The TLS certificate chain to use for encrypted connections.
   --verbose <verbose>     Enable verbose logging (default: false)
   -h, --help              Show help information.
 ```
@@ -315,9 +324,9 @@ gRPC client for interacting with a "docent" server to summarize text.
 
 ```
 $> docent grpc-summarize -h
-OVERVIEW: gRPC client for interacting with a "docent" server.
+OVERVIEW: gRPC client for interacting with a "docent" server to summarize a text.
 
-USAGE: docent grpc-summarize [--host <host>] [--port <port>] [--verbose <verbose>] [--max_length <max_length>] [--max_retries <max_retries>] <args> ...
+USAGE: docent grpc-summarize [--host <host>] [--port <port>] [--tls_certificate <tls_certificate>] [--max_length <max_length>] [--max_retries <max_retries>] [--verbose <verbose>] <args> ...
 
 ARGUMENTS:
   <args>                  The text to operate on. If "-" then data is read from STDIN. If the first argument is a valid path to a local file then the text of that file will be used.
@@ -326,12 +335,14 @@ ARGUMENTS:
 OPTIONS:
   --host <host>           The host name for the gRPC server. (default: 127.0.0.1)
   --port <port>           The port for the gRPC server. (default: 8080)
-  --verbose <verbose>     Enable verbose logging (default: false)
+  --tls_certificate <tls_certificate>
+                          The TLS certificate chain to use for encrypted connections.
   --max_length <max_length>
                           The maximum length of the summary text. This value may be overridden by the gRPC server. (default: 77)
   --max_retries <max_retries>
                           The maximum number of attempts to make summarizing the text to be no longer than the value of the --max_length flag. This value may be overridden by the gRPC
                           server. (default: 1)
+  --verbose <verbose>     Enable verbose logging (default: false)
   -h, --help              Show help information.
 ```
 

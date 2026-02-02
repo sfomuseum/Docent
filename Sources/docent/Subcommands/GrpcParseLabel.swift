@@ -14,6 +14,9 @@ struct GrpcParseLabel: AsyncParsableCommand {
     @Option(help: "The port for the gRPC server.")
     var port: Int = 8080
     
+    @Option(help: "The TLS certificate chain to use for encrypted connections.")
+    var tls_certificate: String = ""
+    
     @Option(help: "Enable verbose logging")
     var verbose: Bool = false
     
@@ -28,11 +31,22 @@ struct GrpcParseLabel: AsyncParsableCommand {
             logger.logLevel = .debug
         }
         
+        var transportSecurity = HTTP2ClientTransport.Posix.TransportSecurity.plaintext
+
+        if tls_certificate != ""  {
+            
+            let certSource:  TLSConfig.CertificateSource   = .file(path: tls_certificate, format: .pem)
+            
+             transportSecurity = HTTP2ClientTransport.Posix.TransportSecurity.tls { config in
+                config.certificateChain = [ certSource ]
+            }
+        }
+        
         try await withGRPCClient(
             
             transport: .http2NIOPosix(
-                target: .ipv4(address: self.host, port: self.port),
-                transportSecurity: .plaintext
+                target: .dns(host: self.host, port: self.port),
+                transportSecurity: transportSecurity
             )
             
         ) { client in
