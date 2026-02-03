@@ -72,6 +72,9 @@ struct GrpcServer: AsyncParsableCommand {
     @Option(help: "The TLS private key to use for encrypted connections")
     var tls_key: String = ""
     
+    @Option(help: "...")
+    var token_uri: String = ""
+    
     @Option(help: "Enable verbose logging")
     var verbose: Bool = false
     
@@ -114,6 +117,14 @@ struct GrpcServer: AsyncParsableCommand {
         
         var server_keepalive = HTTP2ServerTransport.Config.Keepalive.defaults
         server_keepalive.clientBehavior = client_keepalive
+        
+        var interceptors: [ServerInterceptor] = []
+        
+        if token_uri != "" {
+            
+            let token_interceptor = ServerTokenInterceptor(token: "foo")
+            interceptors.append(token_interceptor)
+        }
         
         let transport = HTTP2ServerTransport.Posix(
             address: .ipv4(host: self.host, port: self.port),

@@ -25,6 +25,9 @@ struct GrpcSummarize: AsyncParsableCommand {
     @Option(help: "The maximum number of attempts to make summarizing the text to be no longer than the value of the --max_length flag. This value may be overridden by the gRPC server.")
     var max_retries: Int = 1
     
+    @Option(help:"")
+    var token_uri: String = ""
+    
     @Option(help: "Enable verbose logging")
     var verbose: Bool = false
     
@@ -50,12 +53,21 @@ struct GrpcSummarize: AsyncParsableCommand {
             }
         }
         
+        var interceptors: [ClientInterceptor] = []
+        
+        if token_uri != "" {        
+            logger.debug("Apply token interceptor")
+            let token_interceptor = TokenInterceptor(token:"foo")
+            interceptors.append(token_interceptor)
+        }
+        
         try await withGRPCClient(
             
             transport: .http2NIOPosix(
                 target: .dns(host: self.host, port: self.port),
                 transportSecurity: transportSecurity
-            )
+            ),
+            interceptors: interceptors
             
         ) { client in
             
