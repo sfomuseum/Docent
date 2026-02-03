@@ -24,6 +24,11 @@ struct FoundationModelSummarizer: Summarizer {
     init(_ summarizer_uri: String, logger: Logger?) async throws {
         self.logger = logger
         
+        let proc = ProcessInfo()
+        self.model_name = String(format:"apple/foundationmodels#%@", proc.operatingSystemVersionString)
+        
+        logger?.debug("initialize FoundationModel summarizer with \(summarizer_uri) \(model_name)")
+        
         var models_ok = false
         
         switch SystemLanguageModel.default.availability {
@@ -41,10 +46,7 @@ struct FoundationModelSummarizer: Summarizer {
         
         if !models_ok {
              throw FoundationModelSummarizerErrors.foundationModelsUnavailable
-        }
-        
-        let proc = ProcessInfo()
-        self.model_name = String(format:"apple/foundationmodels#%@", proc.operatingSystemVersionString)
+        }        
     }
     
     func summarize(text: String, maxLength: Int) async -> Result<String, any Error> {

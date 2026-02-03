@@ -17,6 +17,9 @@ struct GrpcParseLabel: AsyncParsableCommand {
     @Option(help: "The TLS certificate chain to use for encrypted connections.")
     var tls_certificate: String = ""
     
+    @Option(help: "The TLS certificate for the CA that signed the TLS certificate used for encrypted connections.")
+    var tls_ca_certificate: String = ""
+    
     @Option(help:"A gocloud.dev/runtimevar compatible URI containing a shared authentication token to include with requests. Currently supported schemes: file://, constant://")
     var token_uri: String = ""
     
@@ -28,34 +31,24 @@ struct GrpcParseLabel: AsyncParsableCommand {
     
     func run() async throws {
         
-        var logger = Logger(label: "org.sfomuseum.docent.grpc.client")
+        var logger = Logger(label: "org.sfomuseum.docent.grpc-parse-label")
 
         if verbose {
             logger.logLevel = .debug
         }
         
-        var transportSecurity = HTTP2ClientTransport.Posix.TransportSecurity.plaintext
-
-        if tls_certificate != ""  {
-            
-            let certSource:  TLSConfig.CertificateSource   = .file(path: tls_certificate, format: .pem)
-            
-             transportSecurity = HTTP2ClientTransport.Posix.TransportSecurity.tls { config in
-                config.certificateChain = [ certSource ]
-            }
-        }
+        let transportSecurity = grpcClientTransortSecurity(
+            tls_certificate: tls_certificate,
+            tls_ca_certificate: tls_ca_certificate,
+            logger: logger
+        )
         
         var interceptors: [ClientInterceptor] = []
         
-        if token_uri != "" {
-            logger.debug("Apply token interceptor")
-            do {
-                let token_interceptor = try ClientTokenInterceptor(token_uri, logger: logger)
-                interceptors.append(token_interceptor)
-            } catch {
-                logger.error("Failed to create token interceptor, \(error)")
-                throw error
-            }
+        do {
+            interceptors = try grpcClientInterceptors(token_uri: token_uri, logger: logger)
+        } catch {
+            throw error
         }
         
         try await withGRPCClient(

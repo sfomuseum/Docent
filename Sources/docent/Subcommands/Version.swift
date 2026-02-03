@@ -4,6 +4,6 @@ struct Version: AsyncParsableCommand {
     static let configuration = CommandConfiguration(abstract: "Print version number")
     
     func run() async throws {
-        print(version)
+        print(version)  // version is set in Defaults.swift
     }
 }

@@ -7,12 +7,14 @@ import GRPCCore
 import GRPCNIOTransportHTTP2
 import GRPCProtobuf
 import MLXLMCommon
+import Hub
 
 enum GrpcServerError: Error, LocalizedError {
     case invalidEncoderURI
     case invalidText
     case invalidURI
     case missingModel
+    case invalidDownloadLocation
     
     public var errorDescription: String? {
         switch self {
@@ -24,6 +26,8 @@ enum GrpcServerError: Error, LocalizedError {
             return "Invalid URI (failed to parse)"
         case .missingModel:
             return "Missing ?model= parameter"
+        case .invalidDownloadLocation:
+            return "Invalid download location"
         }
     }
 }
@@ -71,6 +75,9 @@ struct GrpcServer: AsyncParsableCommand {
     
     @Option(help: "The TLS private key to use for encrypted connections")
     var tls_key: String = ""
+    
+    @Option(help: "The TLS certificate for the CA that signed the TLS certificate used for encrypted connections.")
+    var tls_ca_certificate: String = ""
     
     @Option(help: "...")
     var token_uri: String = ""
@@ -169,11 +176,23 @@ struct GrpcServer: AsyncParsableCommand {
                 
                 logger.debug("Instantiate tools from shared model \(model_name)")
                 
+                var hub = defaultHubApi
+            
+                if let downloads = components.queryItems?.first(where: { $0.name == "downloads" })?.value {
+                    
+                    guard let downloads_url = URL(string: downloads) else {
+                        throw GrpcServerError.invalidDownloadLocation
+                    }
+                    
+                    logger.debug("Use custom downloads location \(downloads_url.absoluteString)")
+                    hub = HubApi(downloadBase: downloads_url)
+                }
+                
                 var model: ModelContext?
                 let model_logger = logger
                 
                 do {
-                    model = try await loadModel(id: model_name, progressHandler: { status in
+                    model = try await loadModel(hub: hub, id: model_name, progressHandler: { status in
                         model_logger.debug("Loading \(model_name) \(status.fractionCompleted * 100)% complete")
                     })
                 } catch {

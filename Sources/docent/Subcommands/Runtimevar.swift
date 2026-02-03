@@ -1,7 +1,7 @@
 
 import Foundation
 
-// Early pass at something which can mimic the aaronland/gocloud/runtimevar functionality.
+// First pass at something which can mimic the aaronland/gocloud/runtimevar functionality.
 // So far only file:// and constant:// URI schemes are supported.
 
 public enum RuntimeVarErrors: Error {

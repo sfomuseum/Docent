@@ -17,6 +17,7 @@ public struct DisabledParser: Parser {
     var logger: Logger?
     
     public init(_ parser_uri: String, instructions: String, logger: Logger?) throws {
+        logger?.debug("initialize label parser summarizer")
         self.logger = logger
     }
     
