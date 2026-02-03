@@ -5,7 +5,7 @@ struct ClientTokenInterceptor: ClientInterceptor {
 
     func intercept<Input: Sendable, Output: Sendable>(
         request: StreamingClientRequest<Input>,
-        context: ClientContext, // Correct type name
+        context: ClientContext,
         next: (StreamingClientRequest<Input>, ClientContext) async throws -> StreamingClientResponse<Output>
     ) async throws -> StreamingClientResponse<Output> {
         
@@ -38,7 +38,6 @@ struct ServerTokenInterceptor: ServerInterceptor {
           throw RPCError(code: .unauthenticated, message: "Not authenticated")
       }
 
-    // Forward the request.
     return try await next(request, context)
   }
 }

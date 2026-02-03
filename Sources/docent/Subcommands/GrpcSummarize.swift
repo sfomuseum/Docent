@@ -57,7 +57,7 @@ struct GrpcSummarize: AsyncParsableCommand {
         
         if token_uri != "" {        
             logger.debug("Apply token interceptor")
-            let token_interceptor = TokenInterceptor(token:"foo")
+            let token_interceptor = ClientTokenInterceptor(token:token_uri)
             interceptors.append(token_interceptor)
         }
         

@@ -121,8 +121,8 @@ struct GrpcServer: AsyncParsableCommand {
         var interceptors: [ServerInterceptor] = []
         
         if token_uri != "" {
-            
-            let token_interceptor = ServerTokenInterceptor(token: "foo")
+            logger.debug("Configure token interceptor")
+            let token_interceptor = ServerTokenInterceptor(token: token_uri)
             interceptors.append(token_interceptor)
         }
         
@@ -199,7 +199,12 @@ struct GrpcServer: AsyncParsableCommand {
         }
         
         let service = DocentService(tools, logger: logger)
-        let server = GRPCServer(transport: transport, services: [service])
+        
+        let server = GRPCServer(
+            transport: transport,
+            services: [service],
+            interceptors: interceptors
+        )
                 
         try await withThrowingDiscardingTaskGroup { group in
             // Why does this time out?
