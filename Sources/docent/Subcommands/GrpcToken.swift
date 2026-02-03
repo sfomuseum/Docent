@@ -1,6 +1,5 @@
 import GRPCCore
 
-
 struct ClientTokenInterceptor: ClientInterceptor {
 
     private let token: String
@@ -31,7 +30,6 @@ struct ClientTokenInterceptor: ClientInterceptor {
 }
 
 struct ServerTokenInterceptor: ServerInterceptor {
-  // let isAuthorized: @Sendable (String, MethodDescriptor) async throws -> Void
 
     private let token: String
     
@@ -56,7 +54,6 @@ struct ServerTokenInterceptor: ServerInterceptor {
     ) async throws -> StreamingServerResponse<Output>
   ) async throws -> StreamingServerResponse<Output> {
       
-    // Extract the auth token.
     guard let auth_token = request.metadata[stringValues: "authorization"].first(where: { _ in true }) else {
       throw RPCError(code: .unauthenticated, message: "Not authenticated")
     }

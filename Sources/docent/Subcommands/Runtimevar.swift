@@ -8,6 +8,7 @@ public enum RuntimeVarErrors: Error {
     case invalidURI
     case invalidScheme
     case missingParameter
+    case notExists
     case isDirectory
     
     public var errorDescription: String? {
@@ -18,6 +19,8 @@ public enum RuntimeVarErrors: Error {
             return "Invalid or unsupported model"
         case .missingParameter:
             return "Missing or empty parameter"
+        case .notExists:
+            return "Path is missing"
         case .isDirectory:
             return "Path references a directory"
         }
@@ -42,6 +45,9 @@ public func StringVar(_ uri: String) -> Result<String, Error> {
         var isDir: ObjCBool = false
         let exists = FileManager.default.fileExists(atPath: path, isDirectory: &isDir)
         
+        if !exists {
+            return .failure(RuntimeVarErrors.notExists)
+        }
         
         if isDir.boolValue {
             return .failure(RuntimeVarErrors.isDirectory)
