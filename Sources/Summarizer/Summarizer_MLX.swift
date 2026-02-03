@@ -4,7 +4,7 @@ import Logging
 import MLX
 import MLXLLM
 import MLXLMCommon
-import MLXDocent
+import DocentModels
 
 enum MLXSummarizerErrors: Error {
     case missingModel

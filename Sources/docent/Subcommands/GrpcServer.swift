@@ -6,7 +6,7 @@ import Summarizer
 import GRPCCore
 import GRPCNIOTransportHTTP2
 import GRPCProtobuf
-import MLXDocent
+import DocentModels
 
 enum GrpcServerError: Error, LocalizedError {
     case invalidEncoderURI

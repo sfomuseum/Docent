@@ -1,10 +1,9 @@
 import Foundation
 import Logging
-
 import MLX
 import MLXLLM
 import MLXLMCommon
-import MLXDocent
+import DocentModels
 
 enum MLXParserErrors: Error, LocalizedError {
     case missingModel

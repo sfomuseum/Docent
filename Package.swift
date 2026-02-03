@@ -19,9 +19,10 @@ let package = Package(
             targets: ["Summarizer"],
         ),
         .library(
-            name: "MLXDocent",
-            targets: ["MLXDocent"],
+            name: "DocentModels",
+            targets: ["DocentModels"],
         ),
+
     ],
     dependencies: [
         .package(url: "https://github.com/ml-explore/mlx-swift-lm/", branch: "main"),
@@ -36,7 +37,7 @@ let package = Package(
         .target(
             name: "WallLabel",
             dependencies: [
-                    "MLXDocent",
+                    "DocentModels",
                     .product(name: "MLXLLM", package: "mlx-swift-lm"),
                     .product(name: "Logging", package: "swift-log")
                 ]
@@ -44,13 +45,13 @@ let package = Package(
         .target(
             name: "Summarizer",
             dependencies: [
-                    "MLXDocent",
+                    "DocentModels",
                     .product(name: "MLXLLM", package: "mlx-swift-lm"),
                     .product(name: "Logging", package: "swift-log")
                 ]
         ),
         .target(
-            name: "MLXDocent",
+            name: "DocentModels",
             dependencies: [
                 .product(name: "MLXLLM", package: "mlx-swift-lm"),
                 .product(name: "Logging", package: "swift-log")
@@ -59,7 +60,7 @@ let package = Package(
         .executableTarget(
             name: "docent",
             dependencies: [
-                "MLXDocent",
+                "DocentModels",
                 "WallLabel",
                 "Summarizer",
                 .product(name: "ArgumentParser", package: "swift-argument-parser"),

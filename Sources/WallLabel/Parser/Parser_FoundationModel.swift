@@ -1,7 +1,7 @@
 import FoundationModels
 import Foundation
-
 import Logging
+import DocentModels
 
 @available(iOS 26.0, macOS 26.0, *)
 struct FoundationModelParser: Parser {
@@ -17,6 +17,12 @@ struct FoundationModelParser: Parser {
         
         logger?.debug("initialize FoundationModel label parser with \(parser_uri) \(model_name)")
 
+        do {
+            try loadFoundationModels(logger)
+        } catch {
+            throw error
+        }
+        
         self.instructions = default_label_parser_instructions
         self.logger = logger
     }
