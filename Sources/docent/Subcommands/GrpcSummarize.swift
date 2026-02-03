@@ -57,8 +57,13 @@ struct GrpcSummarize: AsyncParsableCommand {
         
         if token_uri != "" {        
             logger.debug("Apply token interceptor")
-            let token_interceptor = ClientTokenInterceptor(token:token_uri)
-            interceptors.append(token_interceptor)
+            do {
+                let token_interceptor = try ClientTokenInterceptor(token_uri)
+                interceptors.append(token_interceptor)
+            } catch {
+                logger.error("Failed to create token interceptor, \(error)")
+                throw error
+            }
         }
         
         try await withGRPCClient(

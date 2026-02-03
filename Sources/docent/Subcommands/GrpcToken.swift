@@ -1,8 +1,22 @@
 import GRPCCore
 
-struct ClientTokenInterceptor: ClientInterceptor {
-    let token: String
 
+struct ClientTokenInterceptor: ClientInterceptor {
+
+    private let token: String
+    
+    init(_ token_uri: String) throws {
+
+        let rsp = StringVar(token_uri)
+        
+        switch rsp {
+        case .failure(let error):
+            throw error
+        case .success(let v):
+            self.token = v
+        }
+    }
+        
     func intercept<Input: Sendable, Output: Sendable>(
         request: StreamingClientRequest<Input>,
         context: ClientContext,
@@ -10,7 +24,7 @@ struct ClientTokenInterceptor: ClientInterceptor {
     ) async throws -> StreamingClientResponse<Output> {
         
         var modifiedRequest = request
-        modifiedRequest.metadata.addString("Bearer \(token)", forKey: "authorization")
+        modifiedRequest.metadata.addString("Bearer \(self.token)", forKey: "authorization")
         
         return try await next(modifiedRequest, context)
     }
@@ -18,7 +32,20 @@ struct ClientTokenInterceptor: ClientInterceptor {
 
 struct ServerTokenInterceptor: ServerInterceptor {
   // let isAuthorized: @Sendable (String, MethodDescriptor) async throws -> Void
-    let token: String
+
+    private let token: String
+    
+    init(_ token_uri: String) throws {
+
+        let rsp = StringVar(token_uri)
+        
+        switch rsp {
+        case .failure(let error):
+            throw error
+        case .success(let v):
+            self.token = v
+        }
+    }
     
   func intercept<Input: Sendable, Output: Sendable>(
     request: StreamingServerRequest<Input>,
@@ -34,7 +61,7 @@ struct ServerTokenInterceptor: ServerInterceptor {
       throw RPCError(code: .unauthenticated, message: "Not authenticated")
     }
 
-      if auth_token != token {
+      if auth_token != self.token {
           throw RPCError(code: .unauthenticated, message: "Not authenticated")
       }
 
