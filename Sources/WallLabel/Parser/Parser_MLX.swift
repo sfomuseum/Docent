@@ -32,6 +32,8 @@ public struct MLXParser: Parser {
     
     public init(_ parser_uri: String, instructions: String, logger: Logger?) async throws {
         
+        logger?.debug("initialize MLX label parser with \(parser_uri)")
+        
         guard let u = URL(string: parser_uri) else {
             throw ParserErrors.invalidURI
         }

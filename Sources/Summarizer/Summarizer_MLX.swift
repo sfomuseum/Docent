@@ -29,9 +29,11 @@ public struct MLXSummarizer: Summarizer {
     var model_name: String
     var model_context: ModelContext
     
-    public init(_ Summarizer_uri: String, logger: Logger?) async throws {
+    public init(_ summarizer_uri: String, logger: Logger?) async throws {
         
-        guard let u = URL(string: Summarizer_uri) else {
+        logger?.debug("initialize MLX summarizer with \(summarizer_uri)")
+        
+        guard let u = URL(string: summarizer_uri) else {
             throw SummarizerErrors.invalidURI
         }
         
