@@ -4,7 +4,7 @@ import Logging
 import MLX
 import MLXLLM
 import MLXLMCommon
-import Hub
+import MLXDocent
 
 enum MLXParserErrors: Error, LocalizedError {
     case missingModel
@@ -34,46 +34,21 @@ public struct MLXParser: Parser {
         
         logger?.debug("initialize MLX label parser with \(parser_uri)")
         
-        guard let u = URL(string: parser_uri) else {
-            throw ParserErrors.invalidURI
-        }
+        var model: MLXModel
         
-        guard let components = URLComponents(url: u, resolvingAgainstBaseURL: false) else {
-            throw ParserErrors.invalidURI
-        }
+        let model_rsp = await loadMLXModel(parser_uri, logger: logger)
         
-        guard let model_name = components.queryItems?.first(where: { $0.name == "model" })?.value else {
-            throw MLXParserErrors.missingModel
-        }
-
-        var hub = defaultHubApi
-    
-        if let downloads = components.queryItems?.first(where: { $0.name == "downloads" })?.value {
-            
-            guard let downloads_url = URL(string: downloads) else {
-                throw MLXParserErrors.invalidDownloadLocation
-            }
-            
-            logger?.debug("Use custom downloads location \(downloads_url.absoluteString)")
-            hub = HubApi(downloadBase: downloads_url)
-        }
-        
-        var model_context: ModelContext?
-        
-        do {
-            
-            model_context = try await loadModel(hub: hub, id: model_name, progressHandler: { status in
-                logger?.debug("Loading \(model_name) \(status.fractionCompleted * 100)% complete")
-            })
-            
-        } catch {
+        switch model_rsp {
+        case .failure(let error):
             throw error
-        }
+        case .success(let m):
+            model = m
+        }        
         
         self.instructions = instructions
         self.logger = logger
-        self.model_name = model_name
-        self.model_context = model_context!
+        self.model_name = model.name
+        self.model_context = model.context
     }
     
     public init(_ model_context: ModelContext, instructions: String, logger: Logger?) async throws {

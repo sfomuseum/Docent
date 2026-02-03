@@ -9,6 +9,8 @@ import GRPCProtobuf
 import MLXLMCommon
 import Hub
 
+import MLXDocent
+
 enum GrpcServerError: Error, LocalizedError {
     case invalidEncoderURI
     case invalidText
@@ -159,51 +161,21 @@ struct GrpcServer: AsyncParsableCommand {
             
             if label_parser_uri == summarizer_uri && label_parser_uri.starts(with: "mlx://"){
                 
-                // START OF I am not happy to have to do it this way
-                // but the mechanics of Swift's Sendable/concurrency stuff forces it
+                var model: MLXModel
                 
-                guard let u = URL(string: label_parser_uri) else {
-                    throw GrpcServerError.invalidURI
-                }
+                let model_rsp = await loadMLXModel(label_parser_uri, logger: logger)
                 
-                guard let components = URLComponents(url: u, resolvingAgainstBaseURL: false) else {
-                    throw GrpcServerError.invalidURI
-                }
-                
-                guard let model_name = components.queryItems?.first(where: { $0.name == "model" })?.value else {
-                    throw GrpcServerError.missingModel
-                }
-                
-                logger.debug("Instantiate tools from shared model \(model_name)")
-                
-                var hub = defaultHubApi
-            
-                if let downloads = components.queryItems?.first(where: { $0.name == "downloads" })?.value {
-                    
-                    guard let downloads_url = URL(string: downloads) else {
-                        throw GrpcServerError.invalidDownloadLocation
-                    }
-                    
-                    logger.debug("Use custom downloads location \(downloads_url.absoluteString)")
-                    hub = HubApi(downloadBase: downloads_url)
-                }
-                
-                var model: ModelContext?
-                let model_logger = logger
-                
-                do {
-                    model = try await loadModel(hub: hub, id: model_name, progressHandler: { status in
-                        model_logger.debug("Loading \(model_name) \(status.fractionCompleted * 100)% complete")
-                    })
-                } catch {
-                    logger.error("Failed to load model \(model_name), \(error)")
+                switch model_rsp {
+                case .failure(let error):
                     throw error
+                case .success(let m):
+                    model = m
                 }
-
+                
                 let instructions = default_label_parser_instructions + not_generable_label_parser_instructions
                 
-                label_parser = try await MLXParser(model!, instructions: instructions, logger: logger)
-                summarizer = try await MLXSummarizer(model!, logger: logger)
+                label_parser = try await MLXParser(model.context, instructions: instructions, logger: logger)
+                summarizer = try await MLXSummarizer(model.context, logger: logger)
                 
                 // END OF I am not happy to have to do it this way
                 
