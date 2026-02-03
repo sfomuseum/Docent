@@ -20,7 +20,7 @@ struct GrpcParseLabel: AsyncParsableCommand {
     @Option(help: "The TLS certificate for the CA that signed the TLS certificate used for encrypted connections.")
     var tls_ca_certificate: String = ""
     
-    @Option(help:"A gocloud.dev/runtimevar compatible URI containing a shared authentication token to include with requests. Currently supported schemes: file://, constant://")
+    @Option(help:"A gocloud.dev/runtimevar compatible URI containing a shared authentication token to include with requests. Currently supported schemes: file://{PATH}, constant://?val={VALUE}")
     var token_uri: String = ""
     
     @Option(help: "Enable verbose logging")

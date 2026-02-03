@@ -15,7 +15,10 @@ public func grpcClientTransortSecurity(tls_certificate: String = "", tls_ca_cert
          transportSecurity = HTTP2ClientTransport.Posix.TransportSecurity.tls { config in
              
             config.certificateChain = [ certSource ]
-
+             
+             // For debugging (insecure)
+            // config.serverCertificateVerification = .noVerification
+             
              if tls_ca_certificate != "" {
                  
                  logger?.debug("Configure TLS CA certificate \(tls_ca_certificate)")

@@ -28,7 +28,7 @@ struct GrpcSummarize: AsyncParsableCommand {
     @Option(help: "The maximum number of attempts to make summarizing the text to be no longer than the value of the --max_length flag. This value may be overridden by the gRPC server.")
     var max_retries: Int = 1
     
-    @Option(help:"A gocloud.dev/runtimevar compatible URI containing a shared authentication token to include with requests. Currently supported schemes: file://, constant://")
+    @Option(help:"A gocloud.dev/runtimevar compatible URI containing a shared authentication token to include with requests. Currently supported schemes: file://{PATH}, constant://?val={VALUE}")
     var token_uri: String = ""
     
     @Option(help: "Enable verbose logging")

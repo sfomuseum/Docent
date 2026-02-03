@@ -237,10 +237,10 @@ Sunworld announced new LA and Milwaukee routes in a 1986 four-page fold-out time
 gRPC server for exposing "docent"-related tasks.
 
 ```
-$> docent grpc-server -h
+$> grpc-server -h
 OVERVIEW: gRPC server for exposing "docent"-related tasks.
 
-USAGE: docent grpc-server [--host <host>] [--port <port>] [--label_parser_uri <label_parser_uri>] [--summarizer_uri <summarizer_uri>] [--summarizer_max_length <summarizer_max_length>] [--max_receive_message_length <max_receive_message_length>] [--tls_certificate <tls_certificate>] [--tls_key <tls_key>] [--verbose <verbose>]
+USAGE: docent grpc-server [--host <host>] [--port <port>] [--label_parser_uri <label_parser_uri>] [--summarizer_uri <summarizer_uri>] [--summarizer_max_length <summarizer_max_length>] [--summarizer_max_attempts <summarizer_max_attempts>] [--max_receive_message_length <max_receive_message_length>] [--tls_certificate <tls_certificate>] [--tls_key <tls_key>] [--token_uri <token_uri>] [--verbose <verbose>]
 
 OPTIONS:
   --host <host>           The host name to listen for new connections (default: 127.0.0.1)
@@ -251,11 +251,15 @@ OPTIONS:
                           A URI denoting the framework and model to use for summarizing text. (default: mlx://?model=mlx-community/Olmo-3-7B-Instruct-8bit)
   --summarizer_max_length <summarizer_max_length>
                           The default value and maximum length for summary texts. (default: 77)
+  --summarizer_max_attempts <summarizer_max_attempts>
+                          The default value and maximum length for retrying text-summarizing. (default: 20)
   --max_receive_message_length <max_receive_message_length>
                           Sets the maximum message size in bytes the server may receive. If 0 then the swift-grpc defaults will be used. (default: 0)
   --tls_certificate <tls_certificate>
                           The TLS certificate chain to use for encrypted connections
   --tls_key <tls_key>     The TLS private key to use for encrypted connections
+  --token_uri <token_uri> A gocloud.dev/runtimevar compatible URI containing a shared authentication token to include with requests. Currently supported schemes: file://{PATH},
+                          constant://?val={VALUE}
   --verbose <verbose>     Enable verbose logging (default: false)
   -h, --help              Show help information.
  ```
@@ -281,7 +285,7 @@ gRPC client for interacting with a "docent" server to parse a wall label.
 $> docent grpc-parse-label -h
 OVERVIEW: gRPC client for interacting with a "docent" server to parse a label.
 
-USAGE: docent grpc-parse-label [--host <host>] [--port <port>] [--tls_certificate <tls_certificate>] [--verbose <verbose>] <args> ...
+USAGE: docent grpc-parse-label [--host <host>] [--port <port>] [--tls_certificate <tls_certificate>] [--tls_ca_certificate <tls_ca_certificate>] [--token_uri <token_uri>] [--verbose <verbose>] <args> ...
 
 ARGUMENTS:
   <args>                  The text to operate on. If "-" then data is read from STDIN. If the first argument is a valid path to a local file then the text of that file will be used.
@@ -292,6 +296,10 @@ OPTIONS:
   --port <port>           The port for the gRPC server. (default: 8080)
   --tls_certificate <tls_certificate>
                           The TLS certificate chain to use for encrypted connections.
+  --tls_ca_certificate <tls_ca_certificate>
+                          The TLS certificate for the CA that signed the TLS certificate used for encrypted connections.
+  --token_uri <token_uri> A gocloud.dev/runtimevar compatible URI containing a shared authentication token to include with requests. Currently supported schemes: file://{PATH},
+                          constant://?val={VALUE}
   --verbose <verbose>     Enable verbose logging (default: false)
   -h, --help              Show help information.
 ```
@@ -326,7 +334,7 @@ gRPC client for interacting with a "docent" server to summarize text.
 $> docent grpc-summarize -h
 OVERVIEW: gRPC client for interacting with a "docent" server to summarize a text.
 
-USAGE: docent grpc-summarize [--host <host>] [--port <port>] [--tls_certificate <tls_certificate>] [--max_length <max_length>] [--max_retries <max_retries>] [--verbose <verbose>] <args> ...
+USAGE: docent grpc-summarize [--host <host>] [--port <port>] [--tls_certificate <tls_certificate>] [--tls_ca_certificate <tls_ca_certificate>] [--max_length <max_length>] [--max_retries <max_retries>] [--token_uri <token_uri>] [--verbose <verbose>] <args> ...
 
 ARGUMENTS:
   <args>                  The text to operate on. If "-" then data is read from STDIN. If the first argument is a valid path to a local file then the text of that file will be used.
@@ -337,11 +345,15 @@ OPTIONS:
   --port <port>           The port for the gRPC server. (default: 8080)
   --tls_certificate <tls_certificate>
                           The TLS certificate chain to use for encrypted connections.
+  --tls_ca_certificate <tls_ca_certificate>
+                          The TLS certificate for the CA that signed the TLS certificate used for encrypted connections.
   --max_length <max_length>
                           The maximum length of the summary text. This value may be overridden by the gRPC server. (default: 77)
   --max_retries <max_retries>
                           The maximum number of attempts to make summarizing the text to be no longer than the value of the --max_length flag. This value may be overridden by the gRPC
                           server. (default: 1)
+  --token_uri <token_uri> A gocloud.dev/runtimevar compatible URI containing a shared authentication token to include with requests. Currently supported schemes: file://{PATH},
+                          constant://?val={VALUE}
   --verbose <verbose>     Enable verbose logging (default: false)
   -h, --help              Show help information.
 ```
