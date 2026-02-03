@@ -17,6 +17,9 @@ struct GrpcParseLabel: AsyncParsableCommand {
     @Option(help: "The TLS certificate chain to use for encrypted connections.")
     var tls_certificate: String = ""
     
+    @Option(help:"A gocloud.dev/runtimevar compatible URI containing a shared authentication token to include with requests. Currently supported schemes: file://, constant://")
+    var token_uri: String = ""
+    
     @Option(help: "Enable verbose logging")
     var verbose: Bool = false
     
@@ -42,12 +45,27 @@ struct GrpcParseLabel: AsyncParsableCommand {
             }
         }
         
+        var interceptors: [ClientInterceptor] = []
+        
+        if token_uri != "" {
+            logger.debug("Apply token interceptor")
+            do {
+                let token_interceptor = try ClientTokenInterceptor(token_uri, logger: logger)
+                interceptors.append(token_interceptor)
+            } catch {
+                logger.error("Failed to create token interceptor, \(error)")
+                throw error
+            }
+        }
+        
         try await withGRPCClient(
             
             transport: .http2NIOPosix(
                 target: .dns(host: self.host, port: self.port),
-                transportSecurity: transportSecurity
-            )
+                transportSecurity: transportSecurity,
+            ),
+            
+            interceptors: interceptors
             
         ) { client in
             

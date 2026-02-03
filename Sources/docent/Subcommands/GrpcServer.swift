@@ -124,7 +124,7 @@ struct GrpcServer: AsyncParsableCommand {
             logger.debug("Configure token interceptor")
             
             do {
-                let token_interceptor = try ServerTokenInterceptor(token_uri)
+                let token_interceptor = try ServerTokenInterceptor(token_uri, logger: logger)
                 interceptors.append(token_interceptor)
             } catch {
                 logger.error("Failed to create server interceptor, \(error)")

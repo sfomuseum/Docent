@@ -25,7 +25,7 @@ struct GrpcSummarize: AsyncParsableCommand {
     @Option(help: "The maximum number of attempts to make summarizing the text to be no longer than the value of the --max_length flag. This value may be overridden by the gRPC server.")
     var max_retries: Int = 1
     
-    @Option(help:"")
+    @Option(help:"A gocloud.dev/runtimevar compatible URI containing a shared authentication token to include with requests. Currently supported schemes: file://, constant://")
     var token_uri: String = ""
     
     @Option(help: "Enable verbose logging")
@@ -58,7 +58,7 @@ struct GrpcSummarize: AsyncParsableCommand {
         if token_uri != "" {        
             logger.debug("Apply token interceptor")
             do {
-                let token_interceptor = try ClientTokenInterceptor(token_uri)
+                let token_interceptor = try ClientTokenInterceptor(token_uri, logger: logger)
                 interceptors.append(token_interceptor)
             } catch {
                 logger.error("Failed to create token interceptor, \(error)")

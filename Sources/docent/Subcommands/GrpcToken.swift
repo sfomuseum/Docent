@@ -1,10 +1,12 @@
 import GRPCCore
+import Logging
 
 struct ClientTokenInterceptor: ClientInterceptor {
 
     private let token: String
+    private var logger: Logger?
     
-    init(_ token_uri: String) throws {
+    init(_ token_uri: String, logger: Logger? = nil) throws {
 
         let rsp = StringVar(token_uri)
         
@@ -12,7 +14,7 @@ struct ClientTokenInterceptor: ClientInterceptor {
         case .failure(let error):
             throw error
         case .success(let v):
-            self.token = v
+            self.token = v.trimmingCharacters(in: .whitespacesAndNewlines)
         }
     }
         
@@ -32,8 +34,9 @@ struct ClientTokenInterceptor: ClientInterceptor {
 struct ServerTokenInterceptor: ServerInterceptor {
 
     private let token: String
+    private var logger: Logger?
     
-    init(_ token_uri: String) throws {
+    init(_ token_uri: String, logger: Logger? = nil) throws {
 
         let rsp = StringVar(token_uri)
         
@@ -41,7 +44,7 @@ struct ServerTokenInterceptor: ServerInterceptor {
         case .failure(let error):
             throw error
         case .success(let v):
-            self.token = v
+            self.token = v.trimmingCharacters(in: .whitespacesAndNewlines)
         }
     }
     
@@ -54,12 +57,17 @@ struct ServerTokenInterceptor: ServerInterceptor {
     ) async throws -> StreamingServerResponse<Output>
   ) async throws -> StreamingServerResponse<Output> {
       
-    guard let auth_token = request.metadata[stringValues: "authorization"].first(where: { _ in true }) else {
-      throw RPCError(code: .unauthenticated, message: "Not authenticated")
+    guard var auth_token = request.metadata[stringValues: "authorization"].first(where: { _ in true }) else {
+        logger?.error("Request is missing authorization header \(request.metadata)")
+      throw RPCError(code: .unauthenticated, message: "Missing authorization header")
     }
 
+      auth_token = auth_token.replacingOccurrences(of: "Bearer ", with: "")
+      auth_token = auth_token.trimmingCharacters(in: .whitespacesAndNewlines)
+            
       if auth_token != self.token {
-          throw RPCError(code: .unauthenticated, message: "Not authenticated")
+          logger?.error("Client authentication mismatch")
+          throw RPCError(code: .unauthenticated, message: "Invalid token")
       }
 
     return try await next(request, context)
