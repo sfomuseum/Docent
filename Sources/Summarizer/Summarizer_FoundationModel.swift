@@ -3,6 +3,18 @@ import Foundation
 
 import Logging
 
+enum FoundationModelSummarizerErrors: Error {
+    case foundationModelsUnavailable
+    
+    public var errorDescription: String? {
+        switch self {
+        case .foundationModelsUnavailable:
+            return "FoundationModels are unavailable"
+        }
+    }
+}
+ 
+
 @available(iOS 26.0, macOS 26.0, *)
 struct FoundationModelSummarizer: Summarizer {
     
@@ -11,6 +23,25 @@ struct FoundationModelSummarizer: Summarizer {
     
     init(_ summarizer_uri: String, logger: Logger?) async throws {
         self.logger = logger
+        
+        var models_ok = false
+        
+        switch SystemLanguageModel.default.availability {
+        case .available:
+            models_ok = true
+        case .unavailable(.appleIntelligenceNotEnabled):
+            logger?.error("AppleIntelligence not enabled")
+        case .unavailable(.deviceNotEligible):
+            logger?.error("Device not eligible for AppleIntelligence")
+        case .unavailable(.modelNotReady):
+            logger?.error("FoundationModel not ready")
+        case .unavailable(let other):
+            logger?.error("Uknown error loading FoundationModels, \(other)")
+        }
+        
+        if !models_ok {
+             throw FoundationModelSummarizerErrors.foundationModelsUnavailable
+        }
         
         let proc = ProcessInfo()
         self.model_name = String(format:"apple/foundationmodels#%@", proc.operatingSystemVersionString)
