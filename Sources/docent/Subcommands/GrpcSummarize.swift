@@ -19,11 +19,17 @@ struct GrpcSummarize: AsyncParsableCommand {
     @Option(help: "The TLS certificate chain to use for encrypted connections.")
     var tls_certificate: String = ""
 
+    @Option(help: "The TLS certificate for the CA that signed the TLS certificate used for encrypted connections.")
+    var tls_ca_certificate: String = ""
+    
     @Option(help: "The maximum length of the summary text. This value may be overridden by the gRPC server.")
     var max_length: Int = 77
     
     @Option(help: "The maximum number of attempts to make summarizing the text to be no longer than the value of the --max_length flag. This value may be overridden by the gRPC server.")
     var max_retries: Int = 1
+    
+    @Option(help:"A gocloud.dev/runtimevar compatible URI containing a shared authentication token to include with requests. Currently supported schemes: file://{PATH}, constant://?val={VALUE}")
+    var token_uri: String = ""
     
     @Option(help: "Enable verbose logging")
     var verbose: Bool = false
@@ -33,21 +39,20 @@ struct GrpcSummarize: AsyncParsableCommand {
     
     func run() async throws {
         
-        var logger = Logger(label: "org.sfomuseum.docent.grpc.client")
+        var logger = Logger(label: "org.sfomuseum.docent.grpc-summarize")
 
         if verbose {
             logger.logLevel = .debug
         }
         
-        var transportSecurity = HTTP2ClientTransport.Posix.TransportSecurity.plaintext
-
-        if tls_certificate != ""  {
-            
-            let certSource:  TLSConfig.CertificateSource   = .file(path: tls_certificate, format: .pem)
-            
-             transportSecurity = HTTP2ClientTransport.Posix.TransportSecurity.tls { config in
-                config.certificateChain = [ certSource ]
-            }
+        let transportSecurity = grpcClientTransortSecurity(tls_certificate: tls_certificate, tls_ca_certificate: tls_ca_certificate, logger: logger)
+        
+        var interceptors: [ClientInterceptor] = []
+        
+        do {
+            interceptors = try grpcClientInterceptors(token_uri: token_uri, logger: logger)
+        } catch {
+            throw error
         }
         
         try await withGRPCClient(
@@ -55,7 +60,8 @@ struct GrpcSummarize: AsyncParsableCommand {
             transport: .http2NIOPosix(
                 target: .dns(host: self.host, port: self.port),
                 transportSecurity: transportSecurity
-            )
+            ),
+            interceptors: interceptors
             
         ) { client in
             

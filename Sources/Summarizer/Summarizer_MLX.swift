@@ -4,7 +4,7 @@ import Logging
 import MLX
 import MLXLLM
 import MLXLMCommon
-import Hub
+import DocentModels
 
 enum MLXSummarizerErrors: Error {
     case missingModel
@@ -33,43 +33,20 @@ public struct MLXSummarizer: Summarizer {
         
         logger?.debug("initialize MLX summarizer with \(summarizer_uri)")
         
-        guard let u = URL(string: summarizer_uri) else {
-            throw SummarizerErrors.invalidURI
-        }
+        var model: MLXModel
         
-        guard let components = URLComponents(url: u, resolvingAgainstBaseURL: false) else {
-            throw SummarizerErrors.invalidURI
-        }
+        let model_rsp = await loadMLXModel(summarizer_uri, logger: logger)
         
-        guard let model_name = components.queryItems?.first(where: { $0.name == "model" })?.value else {
-            throw MLXSummarizerErrors.missingModel
-        }
-        
-        var hub = defaultHubApi
-    
-        if let downloads = components.queryItems?.first(where: { $0.name == "downloads" })?.value {
-            
-            guard let downloads_url = URL(string: downloads) else {
-                throw MLXSummarizerErrors.invalidDownloadLocation
-            }
-            
-            logger?.debug("Use custom downloads location \(downloads_url.absoluteString)")
-            hub = HubApi(downloadBase: downloads_url)
-        }
-        
-        var model_context: ModelContext?
-        
-        do {
-            model_context = try await loadModel(hub: hub, id: model_name, progressHandler: { status in
-                logger?.debug("Loading \(model_name) \(status.fractionCompleted * 100)% complete")
-            })
-        } catch {
+        switch model_rsp {
+        case .failure(let error):
             throw error
+        case .success(let m):
+            model = m
         }
         
         self.logger = logger
-        self.model_name = model_name
-        self.model_context = model_context!
+        self.model_name = model.name
+        self.model_context = model.context
     }
     
     public init(_ model_context: ModelContext, logger: Logger?) async throws {

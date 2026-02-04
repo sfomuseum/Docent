@@ -17,6 +17,7 @@ public struct DisabledSummarizer: Summarizer {
     var logger: Logger?
     
     public init(_ Summarizer_uri: String, logger: Logger?) throws {
+        logger?.debug("initialize disabled summarizer")
         self.logger = logger
     }
     

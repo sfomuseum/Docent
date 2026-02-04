@@ -6,13 +6,14 @@ import Summarizer
 import GRPCCore
 import GRPCNIOTransportHTTP2
 import GRPCProtobuf
-import MLXLMCommon
+import DocentModels
 
 enum GrpcServerError: Error, LocalizedError {
     case invalidEncoderURI
     case invalidText
     case invalidURI
     case missingModel
+    case invalidDownloadLocation
     
     public var errorDescription: String? {
         switch self {
@@ -24,6 +25,8 @@ enum GrpcServerError: Error, LocalizedError {
             return "Invalid URI (failed to parse)"
         case .missingModel:
             return "Missing ?model= parameter"
+        case .invalidDownloadLocation:
+            return "Invalid download location"
         }
     }
 }
@@ -72,6 +75,9 @@ struct GrpcServer: AsyncParsableCommand {
     @Option(help: "The TLS private key to use for encrypted connections")
     var tls_key: String = ""
     
+    @Option(help:"A gocloud.dev/runtimevar compatible URI containing a shared authentication token to include with requests. Currently supported schemes: file://{PATH}, constant://?val={VALUE}")
+    var token_uri: String = ""
+    
     @Option(help: "Enable verbose logging")
     var verbose: Bool = false
     
@@ -115,6 +121,21 @@ struct GrpcServer: AsyncParsableCommand {
         var server_keepalive = HTTP2ServerTransport.Config.Keepalive.defaults
         server_keepalive.clientBehavior = client_keepalive
         
+        var interceptors: [ServerInterceptor] = []
+        
+        if token_uri != "" {
+            logger.debug("Configure token interceptor")
+            
+            do {
+                let token_interceptor = try ServerTokenInterceptor(token_uri, logger: logger)
+                interceptors.append(token_interceptor)
+            } catch {
+                logger.error("Failed to create server interceptor, \(error)")
+                throw error
+            }
+            
+        }
+        
         let transport = HTTP2ServerTransport.Posix(
             address: .ipv4(host: self.host, port: self.port),
             transportSecurity: transportSecurity,
@@ -134,39 +155,21 @@ struct GrpcServer: AsyncParsableCommand {
             
             if label_parser_uri == summarizer_uri && label_parser_uri.starts(with: "mlx://"){
                 
-                // START OF I am not happy to have to do it this way
-                // but the mechanics of Swift's Sendable/concurrency stuff forces it
+                var model: MLXModel
                 
-                guard let u = URL(string: label_parser_uri) else {
-                    throw GrpcServerError.invalidURI
-                }
+                let model_rsp = await loadMLXModel(label_parser_uri, logger: logger)
                 
-                guard let components = URLComponents(url: u, resolvingAgainstBaseURL: false) else {
-                    throw GrpcServerError.invalidURI
-                }
-                
-                guard let model_name = components.queryItems?.first(where: { $0.name == "model" })?.value else {
-                    throw GrpcServerError.missingModel
-                }
-                
-                logger.debug("Instantiate tools from shared model \(model_name)")
-                
-                var model: ModelContext?
-                let model_logger = logger
-                
-                do {
-                    model = try await loadModel(id: model_name, progressHandler: { status in
-                        model_logger.debug("Loading \(model_name) \(status.fractionCompleted * 100)% complete")
-                    })
-                } catch {
-                    logger.error("Failed to load model \(model_name), \(error)")
+                switch model_rsp {
+                case .failure(let error):
                     throw error
+                case .success(let m):
+                    model = m
                 }
-
+                
                 let instructions = default_label_parser_instructions + not_generable_label_parser_instructions
                 
-                label_parser = try await MLXParser(model!, instructions: instructions, logger: logger)
-                summarizer = try await MLXSummarizer(model!, logger: logger)
+                label_parser = try await MLXParser(model.context, instructions: instructions, logger: logger)
+                summarizer = try await MLXSummarizer(model.context, logger: logger)
                 
                 // END OF I am not happy to have to do it this way
                 
@@ -188,7 +191,12 @@ struct GrpcServer: AsyncParsableCommand {
         }
         
         let service = DocentService(tools, logger: logger)
-        let server = GRPCServer(transport: transport, services: [service])
+        
+        let server = GRPCServer(
+            transport: transport,
+            services: [service],
+            interceptors: interceptors
+        )
                 
         try await withThrowingDiscardingTaskGroup { group in
             // Why does this time out?
