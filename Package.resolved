@@ -1,5 +1,5 @@
 {
-  "originHash" : "d9b8cf39a357b351396bcef47dfd6a45edb553d838d4232d0d061957de5f8f03",
+  "originHash" : "6196a70785a154215b1574f6193bb9e37f31072c1c9557d4b7884d2d8c05793c",
   "pins" : [
     {
       "identity" : "grpc-swift-2",
@@ -44,6 +44,33 @@
       "state" : {
         "branch" : "main",
         "revision" : "2c700546340c37f275d23302163701b77c4dcbd9"
+      }
+    },
+    {
+      "identity" : "pathkit",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/kylef/PathKit.git",
+      "state" : {
+        "revision" : "3bfd2737b700b9a36565a8c94f4ad2b050a5e574",
+        "version" : "1.0.1"
+      }
+    },
+    {
+      "identity" : "spectre",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/kylef/Spectre.git",
+      "state" : {
+        "revision" : "26cc5e9ae0947092c7139ef7ba612e34646086c7",
+        "version" : "0.10.1"
+      }
+    },
+    {
+      "identity" : "swift-accession-numbers",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/sfomuseum/swift-accession-numbers",
+      "state" : {
+        "revision" : "00c119a0a7d829b3d6ed5c776b6a4a14179ca47f",
+        "version" : "0.0.5"
       }
     },
     {
@@ -242,6 +269,15 @@
       "state" : {
         "revision" : "573e5c9036c2f136b3a8a071da8e8907322403d0",
         "version" : "1.1.6"
+      }
+    },
+    {
+      "identity" : "uritemplate.swift",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/kylef/URITemplate.swift",
+      "state" : {
+        "revision" : "a309673fdf86e4919a0250730e461ac533a03b3a",
+        "version" : "3.0.1"
       }
     }
   ],

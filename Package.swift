@@ -27,6 +27,7 @@ let package = Package(
     dependencies: [
         .package(url: "https://github.com/ml-explore/mlx-swift-lm/", branch: "main"),
         .package(url: "https://github.com/apple/swift-argument-parser", from: "1.7.0"),
+        .package(url: "https://github.com/sfomuseum/swift-accession-numbers", from: "0.0.5"),
         .package(url: "https://github.com/apple/swift-log", from: "1.9.1"),
         .package(url: "https://github.com/grpc/grpc-swift-2.git", from: "2.0.0"),
         .package(url: "https://github.com/grpc/grpc-swift-protobuf.git", from: "2.0.0"),
@@ -39,7 +40,8 @@ let package = Package(
             dependencies: [
                     "DocentModels",
                     .product(name: "MLXLLM", package: "mlx-swift-lm"),
-                    .product(name: "Logging", package: "swift-log")
+                    .product(name: "Logging", package: "swift-log"),
+                    .product(name: "AccessionNumbers", package: "swift-accession-numbers")
                 ]
         ),
         .target(
