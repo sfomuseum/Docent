@@ -101,10 +101,6 @@ public struct MLXSummarizer: Summarizer {
             return .failure(error)
         }
 
-        logger?.info("clear cache")
-        await session.clear()
-        
-        logger?.info("return result")
         return .success(result)
     }
 
